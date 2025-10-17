@@ -11,6 +11,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -20,11 +21,17 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "skills")
+@Table(
+    name = "skills",
+    uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"name", "category"})
+    }
+)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Skill {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -34,19 +41,20 @@ public class Skill {
     private String name;
 
     @NotBlank(message = "Category must not be blank")
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     private String category; // frontend, backend, tool
 
     @NotNull(message = "Priority must not be null")
     @Min(value = 1, message = "Priority must be at least 1")
     @Max(value = 3, message = "Priority must be at most 3")
+    @Column(nullable = false)
     private Integer priority;
 
     @NotBlank(message = "Icon URL must not be blank")
+    @Column(name = "icon_url", nullable = false, length = 255)
     private String iconUrl;
 
     @ManyToMany(mappedBy = "technologies")
     @JsonIgnore
     private Set<Project> projects;
-
 }

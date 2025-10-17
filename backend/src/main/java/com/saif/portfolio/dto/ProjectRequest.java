@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+import org.hibernate.validator.constraints.UniqueElements;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -57,5 +59,6 @@ public class ProjectRequest {
 
     @NotNull(message = "Technologies must not be null")
     @Size(min = 1, message = "At least one technology is required")
+    @UniqueElements(message = "Duplicate technology IDs are not allowed")
     private List<@NotNull(message = "Technology ID must not be null") Long> technologies;
 }

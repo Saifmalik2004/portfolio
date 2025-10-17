@@ -1,7 +1,5 @@
 package com.saif.portfolio.dto;
 
-import java.util.List;
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -34,8 +32,10 @@ public class BlogRequest {
 
     @NotBlank(message = "Author must not be blank")
     private String author;
+
+    @NotBlank(message = "image url must not be blank")
+    private String image;
     
-    @Size(min = 1, max = 5, message = "Images list must contain between 1 and 5 image URLs")
-    private List<String> images;
+    
 
 }

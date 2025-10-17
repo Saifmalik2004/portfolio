@@ -8,7 +8,7 @@ import lombok.Data;
 @Data
 @lombok.Builder
 public class ProjectResponse {
-    private Long id;
+    private Integer id;
     private String title;
     private String slug;
     private String description;

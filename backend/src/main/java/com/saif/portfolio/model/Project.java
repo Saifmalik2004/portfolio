@@ -29,7 +29,7 @@ import lombok.NoArgsConstructor;
 public class Project {
      @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     @Column(nullable = false)
     private String title;
@@ -37,23 +37,26 @@ public class Project {
     @Column(nullable = false, unique = true)
     private String slug;
 
-    @Column(length = 2000)
+    @Column(columnDefinition = "TEXT")
     private String description;
 
-    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ProjectKeyFeature> keyFeatures;
-
+    @Column(name = "github_url")
     private String githubUrl;
+
+    @Column(name = "live_demo_url")
     private String liveDemoUrl;
 
     @Column(nullable = false)
-    private boolean live;
+    private boolean live = false;
 
     @Column(nullable = false)
-    private boolean published;
+    private boolean published = false;
 
     @Column(nullable = false)
-    private boolean featured;
+    private boolean featured = false;
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProjectKeyFeature> keyFeatures;
 
     @ManyToMany
     @JoinTable(
@@ -70,6 +73,9 @@ public class Project {
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProjectImage> images;
 
+    @Column(name = "created_at")
     private Instant createdAt;
+
+    @Column(name = "updated_at")
     private Instant updatedAt;
 }

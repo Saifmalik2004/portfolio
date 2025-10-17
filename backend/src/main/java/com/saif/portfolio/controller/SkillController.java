@@ -14,7 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.saif.portfolio.model.Skill;
 import com.saif.portfolio.payload.ApiResponse;
-import com.saif.portfolio.service.SkillService;
+import com.saif.portfolio.service.impl.SkillServiceImpl;
+
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -22,7 +24,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SkillController {
     
-    private final SkillService skillService;
+    private final SkillServiceImpl skillService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<Skill>>> getAllSkills() {
@@ -39,7 +41,7 @@ public class SkillController {
     }
 
     @GetMapping("/category/{category}")
-    public ResponseEntity<ApiResponse<List<Skill>>> getSkillsByCategorySorted(@PathVariable String category) {
+    public ResponseEntity<ApiResponse<List<Skill>>> getSkillsByCategorySorted(@Valid @PathVariable String category) {
         List<Skill> skills = skillService.getSkillsByCategorySorted(category);
         if (skills.isEmpty()) {
             return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_FOUND)

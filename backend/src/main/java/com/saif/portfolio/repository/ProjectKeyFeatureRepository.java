@@ -8,5 +8,5 @@ import com.saif.portfolio.model.ProjectKeyFeature;
 import com.saif.portfolio.model.ProjectKeyFeatureId;
 
 public interface ProjectKeyFeatureRepository extends JpaRepository<ProjectKeyFeature, ProjectKeyFeatureId> {
-    List<ProjectKeyFeature> findByProjectId(Long projectId);
+    List<ProjectKeyFeature> findByProjectId(Integer projectId);
 }
