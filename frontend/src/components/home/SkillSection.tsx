@@ -1,108 +1,83 @@
-'use client';
-
-import React from 'react';
-import {
-  FaHtml5,
-  FaCss3Alt,
-  FaJava,
-  FaPython,
-  FaReact,
-  FaNodeJs,
-  FaGitAlt,
-  FaGithub,
-  FaBootstrap,
-} from 'react-icons/fa';
-import {
-  SiSpring,
-  SiSpringboot,
-  SiMongodb,
-  SiTailwindcss,
-  SiTypescript,
-  SiNextdotjs,
-  SiExpress,
-} from 'react-icons/si';
-import { DiMysql, DiPostgresql } from 'react-icons/di';
-import { IoLogoJavascript } from 'react-icons/io5';
-import { SiSpringsecurity } from "react-icons/si";
-import oval from '/assets/images/cylinder.avif';
-import triangle from '/assets/images/triangle.avif';
-import square from '/assets/images/square.avif';
-
-const frontendSkills = [
-  { name: 'HTML', icon: <FaHtml5 size={40} color="#E34F26" /> },
-  { name: 'CSS', icon: <FaCss3Alt size={40} color="#1572B6" /> },
-  { name: 'JavaScript', icon: <IoLogoJavascript size={40} color="#F7DF1E" /> },
-  { name: 'TypeScript', icon: <SiTypescript size={40} color="#3178C6" /> },
-  { name: 'React JS', icon: <FaReact size={40} color="#61DAFB" /> },
-  { name: 'Next.js', icon: <SiNextdotjs size={40} color="#000000" /> },
-  { name: 'Bootstrap', icon: <FaBootstrap size={40} color="#7952B3" /> },
-  { name: 'Tailwind CSS', icon: <SiTailwindcss size={40} color="#38B2AC" /> },
-];
-
-const backendSkills = [
-  { name: 'Java', icon: <FaJava size={40} color="#007396" /> },
-  { name: 'Spring Core', icon: <SiSpring size={40} color="#6DB33F" /> },
-  { name: 'Spring Boot', icon: <SiSpringboot size={40} color="#6DB33F" /> },
-  { name: 'Spring Security', icon: <SiSpringsecurity size={40} color="#6DB33F" /> },
-  
-  { name: 'Node.js', icon: <FaNodeJs size={40} color="#339933" /> },
-  { name: 'ExpressJS', icon: <SiExpress size={40} color="#000000" /> },
-  { name: 'Python', icon: <FaPython size={40} color="#3776AB" /> },
-  { name: 'MongoDB', icon: <SiMongodb size={40} color="#47A248" /> },
-  { name: 'MySQL', icon: <DiMysql size={40} color="#4479A1" /> },
-  { name: 'PostgreSQL', icon: <DiPostgresql size={40} color="#336791" /> },
-];
-
-const tools = [
-  { name: 'Git', icon: <FaGitAlt size={40} color="#F05032" /> },
-  { name: 'GitHub', icon: <FaGithub size={40} color="#181717" /> },
-];
+import { useEffect, useState } from "react";
+import skillService from "../../services/skillService";
+import { Skill } from "../../types/skill";
 
 const SkillsSection = () => {
-  const renderSkills = (skills: typeof frontendSkills) =>
-    skills.map((skill, index) => (
+  const [frontendSkills, setFrontendSkills] = useState<Skill[]>([]);
+  const [backendSkills, setBackendSkills] = useState<Skill[]>([]);
+  const [tools, setTools] = useState<Skill[]>([]);
+
+  useEffect(() => {
+    const fetchSkills = async () => {
+      try {
+        const [frontend, backend, tool] = await Promise.all([
+          skillService.getSkillsByCategory("frontend"),
+          skillService.getSkillsByCategory("backend"),
+          skillService.getSkillsByCategory("tool"),
+        ]);
+        setFrontendSkills(frontend);
+        setBackendSkills(backend);
+        setTools(tool);
+      } catch (error) {
+        console.error("Error fetching skills", error);
+      }
+    };
+
+    fetchSkills();
+  }, []);
+
+  const renderSkills = (skills: Skill[]) =>
+    skills.map((skill) => (
       <div
-        key={index}
-        className="w-full max-w-[144px] h-36 rounded-xl bg-white/80 border border-gray-300 shadow-xl flex flex-col items-center justify-center p-4 hover:scale-105 transition-transform duration-300 transform hover:-translate-y-2 mx-auto"
+        key={skill.id}
+        className="w-full max-w-[144px] h-36 rounded-2xl 
+                   bg-[#f9f9f9] 
+                   shadow-[8px_8px_16px_#d1d9e6,-8px_-8px_16px_#ffffff] 
+                   flex flex-col items-center justify-center p-4 
+                   transition-all duration-300 transform 
+                   hover:-translate-y-1 
+                   hover:shadow-[inset_6px_6px_12px_#d1d9e6,inset_-6px_-6px_12px_#ffffff]"
       >
-        {skill.icon}
-        <p className="text-base text-gray-800 font-medium text-center mt-3">
-          {skill.name}
-        </p>
+        <img src={skill.iconUrl} alt={skill.name} className="w-10 h-10 object-contain" />
+        <p className="text-base text-gray-700 font-medium text-center mt-3">{skill.name}</p>
       </div>
     ));
 
   return (
-    <section className="relative min-h-screen py-10 overflow-hidden">
-      {/* ✅ Background Decorative Images */}
-      <div className="absolute inset-0 z-0 flex items-center justify-center">
-        <img src={oval} alt="Oval" className="w-96 h-96 object-cover" />
-        <img src={square} alt="Square" className="w-96 h-96 object-cover" />
-        <img src={triangle} alt="Triangle" className="w-96 h-96 object-cover" />
-      </div>
+    <section className="relative min-h-screen py-16 bg-[#f5f6fa]">
+      <div className="relative z-10 max-w-7xl mx-auto p-8">
+        {/* Gradient main heading for premium touch */}
+       <h2 className="text-5xl font-extrabold text-center mb-16 text-gray-800 tracking-tight drop-shadow-[2px_2px_4px_rgba(0,0,0,0.05)]">
+          Skills & Expertise
+        </h2>
 
-      {/* ✅ Foreground Content */}
-      <div className="relative z-10 bg-white/5 backdrop-blur-md rounded-xl max-w-7xl mx-auto p-8 shadow-2xl">
-        <h2 className="text-4xl font-bold text-center mb-12 text-gray-900">Skills & Expertise</h2>
-
-        <div className="container mx-auto px-4 space-y-12">
+        <div className="container mx-auto px-4 space-y-16">
+          {/* Frontend */}
           <div>
-            <h3 className="text-2xl font-semibold text-gray-800 mb-6">Frontend</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-8">
+            <h3 className="text-3xl font-semibold text-gray-900 mb-8 text-center md:text-left">
+              Frontend Development
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-10 justify-items-center">
               {renderSkills(frontendSkills)}
             </div>
           </div>
 
+          {/* Backend */}
           <div>
-            <h3 className="text-2xl font-semibold text-gray-800 mb-6">Backend</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-8">
+            <h3 className="text-3xl font-semibold text-gray-900 mb-8 text-center md:text-left">
+              Backend Development
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-10 justify-items-center">
               {renderSkills(backendSkills)}
             </div>
           </div>
 
+          {/* Tools */}
           <div>
-            <h3 className="text-2xl font-semibold text-gray-800 mb-6">Tools</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-8">
+            <h3 className="text-3xl font-semibold text-gray-900 mb-8 text-center md:text-left">
+              Tools & Technologies
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-10 justify-items-center">
               {renderSkills(tools)}
             </div>
           </div>
