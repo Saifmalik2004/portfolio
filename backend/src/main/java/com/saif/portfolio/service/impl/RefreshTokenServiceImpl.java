@@ -64,4 +64,11 @@ public void revokeAllExcept(Long userId, String currentTokenHash) {
     public int countActiveByUserId(Long userId, Instant now) {
         return repository.countActiveByUserId(userId, now);
     }
+
+    @Override
+@Transactional
+public void deleteByTokenHash(String tokenHash) {
+    repository.deleteByTokenHash(tokenHash);
+}
+
 }

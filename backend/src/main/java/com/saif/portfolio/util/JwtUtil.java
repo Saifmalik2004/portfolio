@@ -3,6 +3,7 @@ package com.saif.portfolio.util;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -41,6 +42,7 @@ public String generateRefreshToken(UserDetails userDetails, String tokenVersion)
         Map<String, Object> claims = new HashMap<>();
         claims.put("roles", userDetails.getAuthorities());
         claims.put("version", tokenVersion);
+        claims.put("rand", UUID.randomUUID().toString());
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(userDetails.getUsername())

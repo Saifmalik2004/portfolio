@@ -52,8 +52,8 @@ public class AuthController {
         return ResponseEntity.ok(new ApiResponse<>(200, "Email verified successfully", null));
     }
 
-    @PostMapping("/resend-varify-otp")
-    public ResponseEntity<ApiResponse<Void>> resendVarifyOtp(@Valid @RequestBody ResendOtpRequest request) {
+    @PostMapping("/resend-verify-otp")
+    public ResponseEntity<ApiResponse<Void>> resendVerifyOtp(@Valid @RequestBody ResendOtpRequest request) {
         authService.resendEmailVerificationOtp(request.getEmail());
         return ResponseEntity.ok(new ApiResponse<>(200, "verify your email", null));
     }
@@ -76,7 +76,7 @@ public class AuthController {
         ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", tokenResponse.getRefreshToken())
                 .httpOnly(true) // ❌ Prevent JavaScript access
                 .secure(true) // ✅ Required in production (HTTPS)
-                .path("/api/auth/refresh") // 🎯 Restrict cookie access only to refresh endpoint
+                .path("/api/auth/refresh-token") // 🎯 Restrict cookie access only to refresh endpoint
                 .maxAge(7 * 24 * 60 * 60) // 7 days
                 .sameSite("Strict") // ✅ Prevent CSRF from external sites
                 .build();
@@ -90,7 +90,7 @@ public class AuthController {
 
     // 🔹 Refresh token
     @PostMapping("/refresh-token")
-    public ResponseEntity<ApiResponse<TokenResponse>> refreshToken(@RequestBody @CookieValue(value = "refreshToken", required = false) String refreshToken, HttpServletResponse servletResponse) {
+    public ResponseEntity<ApiResponse<TokenResponse>> refreshToken(@CookieValue(value = "refreshToken", required = false) String refreshToken, HttpServletResponse servletResponse) {
         if (refreshToken == null) {
             return ResponseEntity.status(401)
                     .body(new ApiResponse<>(401, "Refresh token missing", null));
@@ -101,7 +101,7 @@ public class AuthController {
         ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", tokenResponse.getRefreshToken())
                 .httpOnly(true)
                 .secure(true)
-                .path("/")
+                .path("/api/auth/refresh-token")
                 .maxAge(7 * 24 * 60 * 60)
                 .sameSite("Strict")
                 .build();
@@ -112,21 +112,27 @@ public class AuthController {
 
     // 🔹 Logout
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<Void>> logout(@RequestBody Map<String, String> request, HttpServletResponse servletResponse) {
-        String refreshToken = request.get("refreshToken");
+public ResponseEntity<ApiResponse<Void>> logout(
+        @CookieValue(name = "refreshToken", required = false) String refreshToken,
+        HttpServletResponse servletResponse) {
+
+    if (refreshToken != null) {
         authService.logout(refreshToken);
-
-        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", "")
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .maxAge(0)
-                .sameSite("Strict")
-                .build();
-
-        servletResponse.addHeader("Set-Cookie", refreshCookie.toString());
-        return ResponseEntity.ok(new ApiResponse<>(200, "Logout successful", null));
     }
+
+    // Clear the cookie
+    ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", "")
+            .httpOnly(true)
+            .secure(true)
+            .path("/")
+            .maxAge(0)
+            .sameSite("Strict")
+            .build();
+
+    servletResponse.addHeader("Set-Cookie", refreshCookie.toString());
+
+    return ResponseEntity.ok(new ApiResponse<>(200, "Logout successful", null));
+}
 
     @PostMapping("/logout-all-other")
     public ResponseEntity<ApiResponse<Void>> logoutAll(@RequestBody Map<String, String> request, HttpServletResponse servletResponse) {

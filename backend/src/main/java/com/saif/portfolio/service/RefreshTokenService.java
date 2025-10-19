@@ -13,4 +13,6 @@ public interface RefreshTokenService {
     void deleteExpiredOrRevoked(Instant before);
     void revokeAllExcept(Long userId, String currentTokenHash);
     int countActiveByUserId(Long userId, Instant now);
+    void deleteByTokenHash(String tokenHash);
+
 }

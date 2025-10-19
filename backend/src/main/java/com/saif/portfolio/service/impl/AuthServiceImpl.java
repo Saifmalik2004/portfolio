@@ -255,6 +255,7 @@ public class AuthServiceImpl implements AuthService {
         String newRefreshToken = jwtUtil.generateRefreshToken(userDetails, tokenVersion);
 
         rt.setRevoked(true);
+
         refreshTokenService.save(rt);
 
         RefreshToken newRt = RefreshToken.builder()
