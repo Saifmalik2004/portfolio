@@ -2,6 +2,7 @@ package com.saif.portfolio.controller;
 
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
@@ -37,11 +38,24 @@ public class AuthController {
     private final AuthService authService;
     private final UserService userService;
 
-    // 🔹 Register user
+    // ✅ Environment-based flag (change to @Value if needed)
+    private final boolean isProduction = false; // 👈 set false for localhost testing
+
+    private ResponseCookie createRefreshCookie(String token, long maxAgeSeconds) {
+        return ResponseCookie.from("refreshToken", token)
+                .httpOnly(true)
+                .secure(isProduction)
+                .path("/")
+                .maxAge(maxAgeSeconds)
+                .sameSite(isProduction ? "None" : "Lax")
+                .build();
+    }
+
+    // 🔹 Register
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<Void>> register(@Valid @RequestBody RegisterRequest request) {
         authService.register(request);
-        return ResponseEntity.status(201)
+        return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(201, "Registered successfully. Please verify your email.", null));
     }
 
@@ -52,121 +66,113 @@ public class AuthController {
         return ResponseEntity.ok(new ApiResponse<>(200, "Email verified successfully", null));
     }
 
+    // 🔹 Resend Verification OTP
     @PostMapping("/resend-verify-otp")
     public ResponseEntity<ApiResponse<Void>> resendVerifyOtp(@Valid @RequestBody ResendOtpRequest request) {
         authService.resendEmailVerificationOtp(request.getEmail());
-        return ResponseEntity.ok(new ApiResponse<>(200, "verify your email", null));
+        return ResponseEntity.ok(new ApiResponse<>(200, "Verification OTP sent", null));
     }
 
-// ✅ Login
+    // ✅ Login
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<TokenResponse>> login(
             @Valid @RequestBody LoginRequest request,
             @RequestHeader(value = "X-Forwarded-For", required = false) String ip,
             HttpServletResponse response) {
 
-        if (ip == null) {
-            ip = "unknown";
-        }
+        if (ip == null) ip = "unknown";
 
-        // ✅ Auth service generates both tokens
         TokenResponse tokenResponse = authService.login(request, ip);
 
-        // ✅ Only set REFRESH TOKEN in cookie (best practice)
-        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", tokenResponse.getRefreshToken())
-                .httpOnly(true) // ❌ Prevent JavaScript access
-                .secure(true) // ✅ Required in production (HTTPS)
-                .path("/api/auth/refresh-token") // 🎯 Restrict cookie access only to refresh endpoint
-                .maxAge(7 * 24 * 60 * 60) // 7 days
-                .sameSite("Strict") // ✅ Prevent CSRF from external sites
-                .build();
-
-        // ✅ Attach cookie
+        // ✅ Refresh token cookie
+        ResponseCookie refreshCookie = createRefreshCookie(tokenResponse.getRefreshToken(), 7 * 24 * 60 * 60);
         response.addHeader("Set-Cookie", refreshCookie.toString());
 
-        // ✅ Return accessToken + refreshToken ALSO in body if frontend wants to store manually
         return ResponseEntity.ok(new ApiResponse<>(200, "Login successful", tokenResponse));
     }
 
-    // 🔹 Refresh token
+    // 🔹 Refresh Token
     @PostMapping("/refresh-token")
-    public ResponseEntity<ApiResponse<TokenResponse>> refreshToken(@CookieValue(value = "refreshToken", required = false) String refreshToken, HttpServletResponse servletResponse) {
+    public ResponseEntity<ApiResponse<TokenResponse>> refreshToken(
+            @CookieValue(value = "refreshToken", required = false) String refreshToken,
+            HttpServletResponse response) {
+
         if (refreshToken == null) {
-            return ResponseEntity.status(401)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ApiResponse<>(401, "Refresh token missing", null));
         }
+
+
         TokenResponse tokenResponse = authService.refreshToken(refreshToken);
-        // ✅ Update cookies
+        ResponseCookie refreshCookie = createRefreshCookie(tokenResponse.getRefreshToken(), 7 * 24 * 60 * 60);
+        response.addHeader("Set-Cookie", refreshCookie.toString());
 
-        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", tokenResponse.getRefreshToken())
-                .httpOnly(true)
-                .secure(true)
-                .path("/api/auth/refresh-token")
-                .maxAge(7 * 24 * 60 * 60)
-                .sameSite("Strict")
-                .build();
-
-        servletResponse.addHeader("Set-Cookie", refreshCookie.toString());
         return ResponseEntity.ok(new ApiResponse<>(200, "Token refreshed successfully", tokenResponse));
     }
 
     // 🔹 Logout
     @PostMapping("/logout")
-public ResponseEntity<ApiResponse<Void>> logout(
-        @CookieValue(name = "refreshToken", required = false) String refreshToken,
-        HttpServletResponse servletResponse) {
+    public ResponseEntity<ApiResponse<Void>> logout(
+            @CookieValue(name = "refreshToken", required = false) String refreshToken,
+            HttpServletResponse response) {
 
-    if (refreshToken != null) {
-        authService.logout(refreshToken);
+        if (refreshToken != null) {
+            authService.logout(refreshToken);
+        }
+
+        // ✅ Clear cookie (sameSite consistent)
+        ResponseCookie clearCookie = createRefreshCookie("", 0);
+        response.addHeader("Set-Cookie", clearCookie.toString());
+
+        return ResponseEntity.ok(new ApiResponse<>(200, "Logout successful", null));
     }
 
-    // Clear the cookie
-    ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", "")
-            .httpOnly(true)
-            .secure(true)
-            .path("/")
-            .maxAge(0)
-            .sameSite("Strict")
-            .build();
-
-    servletResponse.addHeader("Set-Cookie", refreshCookie.toString());
-
-    return ResponseEntity.ok(new ApiResponse<>(200, "Logout successful", null));
-}
-
+    // 🔹 Logout from all other devices
     @PostMapping("/logout-all-other")
-    public ResponseEntity<ApiResponse<Void>> logoutAll(@RequestBody Map<String, String> request, HttpServletResponse servletResponse) {
-        String refreshToken = request.get("refreshToken");
+    public ResponseEntity<ApiResponse<Void>> logoutAllOther(
+            @CookieValue(name = "refreshToken", required = false) String refreshToken) {
+
+        if (refreshToken == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiResponse<>(401, "Refresh token missing", null));
+        }
+
         authService.logoutAllOtherDevices(refreshToken);
-        return ResponseEntity.ok(new ApiResponse<>(200, "Logout from other devices successful", null));
+        return ResponseEntity.ok(new ApiResponse<>(200, "Logged out from other devices successfully", null));
     }
 
-    // 🔹 Forgot password
+    // 🔹 Forgot Password
     @PostMapping("/forgot-password")
     public ResponseEntity<ApiResponse<Void>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
         authService.forgotPassword(request);
         return ResponseEntity.ok(new ApiResponse<>(200, "Password reset OTP sent to your email", null));
     }
 
-    // 🔹 Reset password
+    // 🔹 Reset Password
     @PostMapping("/reset-password")
     public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         authService.resetPassword(request);
         return ResponseEntity.ok(new ApiResponse<>(200, "Password reset successful", null));
     }
 
-    // ✅ Get current logged-in user
+    // ✅ Current User
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserProfileDto>> getCurrentUser() {
         UserProfileDto currentUser = userService.getCurrentUserFromContext();
         return ResponseEntity.ok(new ApiResponse<>(200, "Current user fetched successfully", currentUser));
     }
 
-    // 🔹 Social login (Google, GitHub, etc.)
+    // 🔹 Social Login
     @PostMapping("/social-login/{provider}")
     public ResponseEntity<ApiResponse<TokenResponse>> socialLogin(
             @PathVariable String provider,
             @RequestBody Map<String, Object> profile) {
+
+        if (profile == null || !profile.containsKey("id")) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>(400, "Invalid social login data", null));
+        }
+
         String providerUserId = (String) profile.get("id");
         TokenResponse response = authService.socialLogin(provider, providerUserId, profile);
         return ResponseEntity.ok(new ApiResponse<>(200, "Social login successful", response));

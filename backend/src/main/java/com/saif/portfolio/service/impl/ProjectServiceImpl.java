@@ -73,7 +73,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     // ----------------- CREATE / UPDATE METHODS -----------------
-    @CacheEvict(value = {"allProjects", "projectBySlug"}, allEntries = true)
+    @CacheEvict(value = {"allProjects", "projectBySlug","featuredProjects"}, allEntries = true)
     @Transactional
     @Override
     public ProjectResponse createProject(ProjectRequest request) {
@@ -141,7 +141,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Transactional
-    @CacheEvict(value = {"allProjects", "projectBySlug"}, allEntries = true)
+    @CacheEvict(value = {"allProjects", "projectBySlug","featuredProjects"}, allEntries = true)
     @Override
     public ProjectResponse updateProject(Integer id, ProjectRequest request) {
         Project project = projectRepository.findById(id)
@@ -233,7 +233,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Transactional
-    @CacheEvict(value = {"allProjects", "projectBySlug"}, allEntries = true)
+    @CacheEvict(value = {"allProjects", "projectBySlug","featuredProjects"}, allEntries = true)
     @Override
     public ProjectResponse deleteProject(Integer id) {
         Project project = projectRepository.findById(id)
@@ -243,7 +243,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Transactional
-    @CacheEvict(value = {"allProjects", "projectBySlug"}, allEntries = true)
+    @CacheEvict(value = {"allProjects", "projectBySlug","featuredProjects"}, allEntries = true)
     @Override
     public ProjectResponse toggleLive(Integer id) {
         Project project = projectRepository.findById(id)
@@ -254,7 +254,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Transactional
-    @CacheEvict(value = {"allProjects", "projectBySlug"}, allEntries = true)
+    @CacheEvict(value = {"allProjects", "projectBySlug","featuredProjects"}, allEntries = true)
     @Override
     public ProjectResponse togglePublished(Integer id) {
         Project project = projectRepository.findById(id)
@@ -266,7 +266,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Transactional
-    @CacheEvict(value = {"allProjects", "projectBySlug"}, allEntries = true)
+    @CacheEvict(value = {"allProjects", "projectBySlug","featuredProjects"}, allEntries = true)
     @Override
     public ProjectResponse toggleFeatured(Integer id) {
         Project project = projectRepository.findById(id)
