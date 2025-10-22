@@ -11,12 +11,12 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import com.saif.portfolio.dto.ImageUploadResponse;
 import com.saif.portfolio.dto.ProjectRequest;
 import com.saif.portfolio.dto.ProjectResponse;
 import com.saif.portfolio.exception.ResourceNotFoundException;
 import com.saif.portfolio.model.Project;
 import com.saif.portfolio.model.ProjectImage;
-import com.saif.portfolio.model.ProjectImageId;
 import com.saif.portfolio.model.ProjectKeyFeature;
 import com.saif.portfolio.model.ProjectKeyFeatureId;
 import com.saif.portfolio.model.ProjectType;
@@ -73,7 +73,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     // ----------------- CREATE / UPDATE METHODS -----------------
-    @CacheEvict(value = {"allProjects", "projectBySlug","featuredProjects"}, allEntries = true)
+    @CacheEvict(value = {"allProjects", "projectBySlug", "featuredProjects"}, allEntries = true)
     @Transactional
     @Override
     public ProjectResponse createProject(ProjectRequest request) {
@@ -109,12 +109,12 @@ public class ProjectServiceImpl implements ProjectService {
         // Handle images with composite key
         if (request.getImages() != null) {
             List<ProjectImage> images = new ArrayList<>();
-            for (String imageUrl : request.getImages()) {
-                ProjectImageId imageId = new ProjectImageId(saved.getId(), imageUrl);
-                ProjectImage img = new ProjectImage();
-                img.setId(imageId);
-                img.setProject(saved);
-                images.add(img);
+            for (ImageUploadResponse image : request.getImages()) {
+                ProjectImage entity = new ProjectImage();
+                entity.setPublicId(image.getPublicId());
+                entity.setProject(saved);
+                entity.setUrl(image.getUrl());
+                images.add(entity);
             }
             saved.setImages(images);
         }
@@ -141,7 +141,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Transactional
-    @CacheEvict(value = {"allProjects", "projectBySlug","featuredProjects"}, allEntries = true)
+    @CacheEvict(value = {"allProjects", "projectBySlug", "featuredProjects"}, allEntries = true)
     @Override
     public ProjectResponse updateProject(Integer id, ProjectRequest request) {
         Project project = projectRepository.findById(id)
@@ -186,27 +186,31 @@ public class ProjectServiceImpl implements ProjectService {
 
         // ✅ Update Images
         if (request.getImages() != null) {
-            List<String> newImages = request.getImages().stream().distinct().toList();
-
             if (project.getImages() == null) {
                 project.setImages(new ArrayList<>());
             }
 
-            // Remove images not in the new list
-            project.getImages().removeIf(img -> !newImages.contains(img.getId().getImage()));
+            // 1️⃣ Delete removed images
+            List<ProjectImage> imagesToRemove = project.getImages().stream()
+                    .filter(dbImg -> request.getImages().stream()
+                    .noneMatch(reqImg -> reqImg.getPublicId().equals(dbImg.getPublicId())))
+                    .toList();
 
-            // Add new images
-            Set<String> existingImageUrls = project.getImages().stream()
-                    .map(img -> img.getId().getImage())
+            imagesToRemove.forEach(img -> { // delete from Cloudinary
+                project.getImages().remove(img);             // remove from DB
+            });
+
+            // 2️⃣ Add new images
+            Set<String> existingPublicIds = project.getImages().stream()
+                    .map(ProjectImage::getPublicId)
                     .collect(Collectors.toSet());
 
-            // Add only new images
-            newImages.stream()
-                    .filter(imageUrl -> !existingImageUrls.contains(imageUrl))
-                    .forEach(imageUrl -> {
-                        ProjectImageId imageId = new ProjectImageId(project.getId(), imageUrl);
+            request.getImages().stream()
+                    .filter(reqImg -> !existingPublicIds.contains(reqImg.getPublicId()))
+                    .forEach(reqImg -> {
                         ProjectImage newImg = new ProjectImage();
-                        newImg.setId(imageId);
+                        newImg.setPublicId(reqImg.getPublicId());
+                        newImg.setUrl(reqImg.getUrl());
                         newImg.setProject(project);
                         project.getImages().add(newImg);
                     });
@@ -233,7 +237,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Transactional
-    @CacheEvict(value = {"allProjects", "projectBySlug","featuredProjects"}, allEntries = true)
+    @CacheEvict(value = {"allProjects", "projectBySlug", "featuredProjects"}, allEntries = true)
     @Override
     public ProjectResponse deleteProject(Integer id) {
         Project project = projectRepository.findById(id)
@@ -243,7 +247,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Transactional
-    @CacheEvict(value = {"allProjects", "projectBySlug","featuredProjects"}, allEntries = true)
+    @CacheEvict(value = {"allProjects", "projectBySlug", "featuredProjects"}, allEntries = true)
     @Override
     public ProjectResponse toggleLive(Integer id) {
         Project project = projectRepository.findById(id)
@@ -254,7 +258,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Transactional
-    @CacheEvict(value = {"allProjects", "projectBySlug","featuredProjects"}, allEntries = true)
+    @CacheEvict(value = {"allProjects", "projectBySlug", "featuredProjects"}, allEntries = true)
     @Override
     public ProjectResponse togglePublished(Integer id) {
         Project project = projectRepository.findById(id)
@@ -266,7 +270,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Transactional
-    @CacheEvict(value = {"allProjects", "projectBySlug","featuredProjects"}, allEntries = true)
+    @CacheEvict(value = {"allProjects", "projectBySlug", "featuredProjects"}, allEntries = true)
     @Override
     public ProjectResponse toggleFeatured(Integer id) {
         Project project = projectRepository.findById(id)
@@ -291,7 +295,11 @@ public class ProjectServiceImpl implements ProjectService {
                 .createdAt(project.getCreatedAt())
                 .updatedAt(project.getUpdatedAt())
                 .keyFeatures(project.getKeyFeatures() != null ? project.getKeyFeatures().stream().map(f -> f.getId().getKeyFeature()).toList() : null)
-                .images(project.getImages() != null ? project.getImages().stream().map(img -> img.getId().getImage()).toList() : null)
+                .images(project.getImages() != null
+                        ? project.getImages().stream()
+                                .map(img -> new ImageUploadResponse(img.getPublicId(), img.getUrl()))
+                                .toList()
+                        : null)
                 .technologies(project.getTechnologies() != null ? project.getTechnologies().stream().map(Skill::getName).toList() : null)
                 .build();
     }

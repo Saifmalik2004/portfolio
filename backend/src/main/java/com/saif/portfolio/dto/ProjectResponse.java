@@ -21,6 +21,6 @@ public class ProjectResponse {
     private Instant createdAt;
     private Instant updatedAt;
     private List<String> keyFeatures;
-    private List<String> images;
+    private List<ImageUploadResponse> images;
     private List<String> technologies;
 }

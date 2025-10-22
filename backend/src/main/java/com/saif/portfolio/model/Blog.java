@@ -7,7 +7,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -33,7 +34,6 @@ public class Blog {
     @Column(nullable = false, length = 1000)
     private String summary;
 
-  
     @Column(nullable = false, length = 100)
     private String category;
 
@@ -43,17 +43,28 @@ public class Blog {
     @Column(nullable = false)
     private String author;
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", updatable = false)
     private Instant createdAt;
 
     @Column(name = "updated_at")
     private Instant updatedAt;
 
-    @Lob
     @Column(columnDefinition = "TEXT")
     private String content;
 
     @NotBlank(message = "Image URL must not be blank")
     @Column(name = "image", nullable = false, length = 255)
     private String image;
+
+    // ✅ Add this part
+    @PrePersist
+    public void onCreate() {
+        this.createdAt = Instant.now();
+        this.updatedAt = Instant.now();
+    }
+
+    @PreUpdate
+    public void onUpdate() {
+        this.updatedAt = Instant.now();
+    }
 }

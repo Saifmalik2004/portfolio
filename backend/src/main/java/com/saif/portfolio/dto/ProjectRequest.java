@@ -1,16 +1,17 @@
 package com.saif.portfolio.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import com.saif.portfolio.model.ProjectType;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.util.List;
 
 import org.hibernate.validator.constraints.UniqueElements;
+
+import com.saif.portfolio.model.ProjectType;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
@@ -55,7 +56,7 @@ public class ProjectRequest {
 
     @NotNull(message = "Images must not be null")
     @Size(min = 1, message = "At least one image is required")
-    private List<@NotBlank(message = "Image URL must not be blank") String> images;
+    private List<ImageUploadResponse> images;
 
     @NotNull(message = "Technologies must not be null")
     @Size(min = 1, message = "At least one technology is required")

@@ -58,11 +58,15 @@ CREATE TABLE project_technologies (
 );
 
 -- 9️⃣ PROJECT_IMAGES TABLE
+
+
 CREATE TABLE project_images (
+    id SERIAL PRIMARY KEY,
     project_id INTEGER REFERENCES projects(id) ON DELETE CASCADE,
-    image VARCHAR(255) NOT NULL,
-    PRIMARY KEY (project_id, image)
+    public_id VARCHAR(255) NOT NULL,
+    url VARCHAR(255) NOT NULL
 );
+
 
 CREATE TABLE certificates (
     id SERIAL PRIMARY KEY,

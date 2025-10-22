@@ -1,6 +1,5 @@
 package com.saif.portfolio.service.impl;
 
-import java.time.Instant;
 import java.util.List;
 
 import org.springframework.cache.annotation.CacheEvict;
@@ -68,7 +67,6 @@ public class BlogServiceImpl implements BlogService {
         blog.setReadTime(blogRequest.getReadTime());
         blog.setAuthor(blogRequest.getAuthor());
         blog.setImage(blogRequest.getImage());
-        blog.setUpdatedAt(Instant.now());
         return blogRepository.save(blog);
     }
 
@@ -89,7 +87,6 @@ public class BlogServiceImpl implements BlogService {
         blog.setSummary(blogRequest.getSummary());
         blog.setContent(blogRequest.getContent());
         blog.setImage(blogRequest.getImage());
-        blog.setUpdatedAt(Instant.now());
         return blogRepository.save(blog);
     }
 
