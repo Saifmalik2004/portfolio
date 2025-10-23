@@ -21,9 +21,15 @@ CREATE TABLE blogs (
     category VARCHAR(100) NOT NULL,
     read_time VARCHAR(50) NOT NULL,
     author VARCHAR(255) NOT NULL,
-    image VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE blog_images (
+    id SERIAL PRIMARY KEY,
+    blog_id INTEGER REFERENCES blogs(id) ON DELETE CASCADE,
+    public_id VARCHAR(255) NOT NULL,
+    url VARCHAR(255) NOT NULL
 );
 
 
@@ -66,6 +72,7 @@ CREATE TABLE project_images (
     public_id VARCHAR(255) NOT NULL,
     url VARCHAR(255) NOT NULL
 );
+
 
 
 CREATE TABLE certificates (

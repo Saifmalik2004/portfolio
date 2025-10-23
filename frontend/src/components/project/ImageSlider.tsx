@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ImageUploadResponse } from '@/types/project';
 
 interface ImageSliderProps {
-  images: string[];
+  images: ImageUploadResponse[];
   title: string;
 }
 
@@ -30,7 +31,7 @@ const ImageSlider: React.FC<ImageSliderProps> = ({ images, title }) => {
     return (
       <div className="relative w-full h-96 rounded-xl overflow-hidden">
         <img
-          src={images[0]}
+          src={images[0].url}
           alt={title}
           className="w-full h-full object-cover"
         />
@@ -45,7 +46,7 @@ const ImageSlider: React.FC<ImageSliderProps> = ({ images, title }) => {
         <AnimatePresence mode="wait">
           <motion.img
             key={currentIndex}
-            src={images[currentIndex]}
+            src={images[currentIndex].url}
             alt={`${title} - Image ${currentIndex + 1}`}
             className="w-full h-full object-cover"
             initial={{ opacity: 0, x: 100 }}

@@ -21,5 +21,5 @@ public class BlogListResponse {
     private String author;
     private Instant createdAt;
     private Instant updatedAt;
-    private String image;
+    private ImageUploadResponse image;
 }

@@ -16,10 +16,6 @@ const InfoCard: React.FC<InfoCardProps> = ({
 }) => (
   <motion.a
     href={href}
-    initial={{ y: 30, opacity: 0 }}
-    whileInView={{ y: 0, opacity: 1 }}
-    viewport={{ once: true }}
-    transition={{ delay: 0.6 + index * 0.1 }}
     whileHover={{ scale: 1.05, x: 10 }}
     className="flex items-center space-x-6 p-6 bg-white/80 backdrop-blur-lg rounded-2xl border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300 group"
   >

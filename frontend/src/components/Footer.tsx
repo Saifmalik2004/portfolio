@@ -31,7 +31,7 @@ const Footer = () => {
                 aria-label={label}
                 whileHover={{ scale: 1.2, rotateY: 180 }}
                 whileTap={{ scale: 0.9 }}
-                className="p-3 bg-gray-200 rounded-full hover:bg-orange-500 hover:text-white transition-colors"
+                className="p-3 bg-gray-200 text-black rounded-full hover:bg-orange-500 hover:text-white transition-colors"
               >
                 <Icon size={20} />
               </motion.a>

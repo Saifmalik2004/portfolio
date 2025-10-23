@@ -1,8 +1,9 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import FloatingTechIcons from './IconFloating';
-import RevealText from './RevealText';
+import { motion } from "framer-motion";
+import FloatingTechIcons from "./IconFloating";
+import BlurText from "@/components/ui/BlurText";
 
+const text =
+  "I’m a fullstack developer with a strong passion for Java and crafting scalable, efficient systems. While backend development is where I feel most at home I also have a genuine interest in frontend development. I understand the importance of how backend and frontend work hand in hand to build great products.";
 const AboutSection = () => {
   return (
     <section className="mt-28 relative bg-white overflow-hidden">
@@ -19,24 +20,21 @@ const AboutSection = () => {
         </motion.h2>
 
         {/* Main Content */}
-        <div className=" mt-0 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+        <div className=" mt-0 grid grid-cols-1 md:grid-cols-2 gap-12 items-center mb-20">
           {/* Left Side - Text */}
-          <motion.div
-            initial={{ x: -60, opacity: 0 }}
-            whileInView={{ x: 0, opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2, duration: 0.8 }}
-            className="text-left "
-          >
-             <RevealText />
-          </motion.div>
+
+          <BlurText
+            text={text}
+            delay={100}
+            animateBy="words"
+            direction="top"
+            className="text-3xl leading-relaxed  text-wrap  text-black font-semibold "
+          />
 
           {/* Right Side - Tech Stack Cards */}
-         <FloatingTechIcons/>
+          <FloatingTechIcons />
         </div>
       </div>
-
-      
     </section>
   );
 };

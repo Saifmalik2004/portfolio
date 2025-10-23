@@ -1,9 +1,16 @@
-'use client';
+
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import avtar1 from '/assets/images/avtar.png';
 import avtar2 from '/assets/images/avtar2.png';
 const testimonials = [
+  {
+    name: 'David Lee',
+    role: 'CEO, Technovation Inc.',
+    image: avtar1,
+    content:
+      "Working with Larry was a dream. He took the time to understand our business and target audience, and the website he designed perfectly reflects our brand identity. Larry's ongoing support also gives us peace of mind, knowing our website is always running smoothly.",
+  },
   {
     name: 'David Lee',
     role: 'CEO, Technovation Inc.',
@@ -33,8 +40,8 @@ export default function MinimalTestimonialSlider() {
   const changeTestimonial = (i: number) => setIndex(i);
 
   return (
-    <section className="pt-11 pb-40 bg-white text-center overflow-hidden w-full">
-      <h2 className="text-3xl md:text-5xl font-semibold mb-20 text-gray-900">
+    <section className="pt-11 pb-20 bg-white text-center overflow-hidden w-full">
+      <h2 className="text-3xl md:text-5xl font-semibold mb-10 text-gray-900">
         Kind words from Clients
       </h2>
 
@@ -49,7 +56,7 @@ export default function MinimalTestimonialSlider() {
             className="absolute inset-0 flex flex-col items-center justify-center"
           >
             {/* Avatar */}
-            <div className="bg-green-100 w-28 h-28 md:w-36 md:h-36 rounded-full flex items-center justify-center mb-6 shadow-md">
+            <div className="rounded-full flex items-center justify-center mb-6 shadow-md">
               <img
                 src={testimonials[index].image}
                 alt={testimonials[index].name}

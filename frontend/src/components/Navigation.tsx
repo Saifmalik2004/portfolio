@@ -19,7 +19,7 @@ const Navigation = () => {
   const navItems = [
     { path: '/', label: 'Home', icon: User },
     { path: '/projects', label: 'Projects', icon: Briefcase },
-    { path: '/blog', label: 'Blog', icon: BookOpen },
+    { path: '/blogs', label: 'Blog', icon: BookOpen },
     { path: '/certificates', label: 'Certificates', icon: Award },
     { path: '/fun', label: 'Fun', icon: Gamepad2 },
   ];

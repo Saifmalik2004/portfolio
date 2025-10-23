@@ -1,37 +1,33 @@
-export interface Blog {
-  id: string;
+import { ImageUploadResponse } from "./project";
+
+// Blog response from API
+export interface BlogResponse {
+  id: number;
   title: string;
   slug: string;
-  excerpt: string;
+  summary: string;
   content: string;
-  image: string;
   category: string;
-  is_published: boolean;
-  read_time: string;
+  readTime: string;
   author: string;
-  tags: string[];
-  meta_description: string;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
+  image: ImageUploadResponse;
 }
 
+// Request payload for creating/updating blog
+export interface BlogRequest {
+  title: string;
+  slug: string;
+  summary: string;
+  content: string;
+  category: string;
+  readTime: string;
+  author: string;
+  image: ImageUploadResponse;
+}
+
+// State types for blog pages
 export interface BlogFilters {
   category?: string;
-  tag?: string;
-  isPublished?: boolean;
-  author?: string;
-}
-
-export interface BlogFormData {
-  title: string;
-  slug: string;
-  excerpt: string;
-  content: string;
-  image: string;
-  category: string;
-  is_published: boolean;
-  read_time: string;
-  author: string;
-  tags: string[];
-  meta_description: string;
 }
