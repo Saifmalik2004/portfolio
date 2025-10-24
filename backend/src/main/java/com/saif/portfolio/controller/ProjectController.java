@@ -13,10 +13,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.saif.portfolio.dto.ApiResponse;
 import com.saif.portfolio.dto.ProjectRequest;
 import com.saif.portfolio.dto.ProjectResponse;
 import com.saif.portfolio.model.ProjectType;
-import com.saif.portfolio.payload.ApiResponse;
 import com.saif.portfolio.service.impl.ProjectServiceImpl;
 
 import jakarta.validation.Valid;

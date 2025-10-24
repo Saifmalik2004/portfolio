@@ -10,7 +10,7 @@ public interface RefreshTokenService {
     Optional<RefreshToken> findByTokenHash(String tokenHash);
     Optional<RefreshToken> findActiveByUserIdAndTokenHash(Long userId, String tokenHash, Instant now);
     void revokeAllByUserId(Long userId);
-    void deleteExpiredOrRevoked(Instant before);
+    void deleteExpiredOrRevoked();
     void revokeAllExcept(Long userId, String currentTokenHash);
     int countActiveByUserId(Long userId, Instant now);
     void deleteByTokenHash(String tokenHash);

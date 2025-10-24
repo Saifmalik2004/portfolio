@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.saif.portfolio.dto.ApiResponse;
 import com.saif.portfolio.model.Skill;
-import com.saif.portfolio.payload.ApiResponse;
 import com.saif.portfolio.service.impl.SkillServiceImpl;
 
 import jakarta.validation.Valid;

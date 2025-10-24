@@ -3,6 +3,7 @@ import { Search, RefreshCw, MailCheck } from "lucide-react";
 import { ContactResponse } from "../../../types/contact";
 import ContactRow from "./ContactRow";
 import ContactSkeletonRow from "./ContactSkeletonRow";
+import { Button } from "@/components/ui/button";
 
 interface ContactListProps {
   contacts: ContactResponse[];
@@ -46,56 +47,59 @@ const ContactList: React.FC<ContactListProps> = ({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">Contact Messages</h2>
-        <div className="flex items-center space-x-3">
-          <button
-            onClick={onRefresh}
-            className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
-            disabled={isFetching}
-          >
-            <RefreshCw size={18} />
-          </button>
-          <button
-  onClick={onMarkAllAsRead}
-  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-70"
-  disabled={isMarkingAll}
->
-  {isMarkingAll ? (
-    <span className="flex items-center">
-      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-      Marking...
-    </span>
-  ) : (
-    <>
-      <MailCheck size={18} className="inline mr-1" />
-      Mark All Read
-    </>
-  )}
-</button>
+     {/* Header */}
+<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+  <div>
+    <h2 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+      Contact Messages
+    </h2>
+    <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
+      Manage and respond to your contact messages efficiently
+    </p>
+  </div>
 
-        </div>
-      </div>
+  <div className="flex flex-wrap items-center gap-3">
+    <Button
+      variant="outline"
+      onClick={onRefresh}
+      disabled={isFetching}
+      className="flex items-center gap-2"
+    >
+      <RefreshCw className="h-4 w-4" />
+      Refresh
+    </Button>
 
-      {/* Filters */}
-      <div className="flex space-x-4">
-        <button
-          className={`px-4 py-2 rounded-lg ${
-            filterMode === "all" ? "bg-blue-600 text-white" : "bg-gray-200"
-          }`}
-          onClick={() => setFilterMode("all")}
-        >
-          All
-        </button>
-        <button
-          className={`px-4 py-2 rounded-lg ${
-            filterMode === "unread" ? "bg-blue-600 text-white" : "bg-gray-200"
-          }`}
-          onClick={() => setFilterMode("unread")}
-        >
-          Unread
-        </button>
-      </div>
+    <Button
+      variant="default"
+      onClick={onMarkAllAsRead}
+      disabled={isMarkingAll}
+      className="flex items-center gap-2"
+    >
+      <MailCheck className="h-4 w-4" />
+      {isMarkingAll ? "Marking..." : "Mark All Read"}
+    </Button>
+  </div>
+</div>
+
+
+     {/* Filters */}
+<div className="flex space-x-4">
+  <Button
+    variant={filterMode === "all" ? "default" : "outline"}
+    onClick={() => setFilterMode("all")}
+    size="sm"
+  >
+    All
+  </Button>
+
+  <Button
+    variant={filterMode === "unread" ? "default" : "outline"}
+    onClick={() => setFilterMode("unread")}
+    size="sm"
+  >
+    Unread
+  </Button>
+</div>
 
       {/* Search */}
       <div className="bg-white p-4 rounded-lg shadow-sm border">

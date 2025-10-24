@@ -65,49 +65,48 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
 
         {/* Tech Stack */}
         <div className="flex flex-wrap items-center gap-2 mb-5">
-          {project.technologies.slice(0, 3).map((tech) => (
-            <span
-              key={tech}
-              className="px-2.5 py-1 text-[11px] font-medium 
-                 bg-gray-100 text-gray-700 
-                 rounded-full border border-gray-200"
-            >
-              {tech}
-            </span>
-          ))}
+            {project.technologies.slice(0, 3).map((tech, i) => (
+              <span
+                key={`${tech}-${i}`}
+                className="px-2.5 py-1 text-[11px] font-medium 
+                   bg-gray-100 text-gray-700 
+                   rounded-full border border-gray-200"
+              >
+                {tech}
+              </span>
+            ))}
 
-          {/* ✅ More Count Badge */}
-          {project.technologies.length > 3 && (
-  <TooltipProvider>
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <span
-          className="px-2.5 py-1 text-[11px] font-medium 
-                     bg-gray-200 text-gray-800 
-                     rounded-full border border-gray-300 cursor-pointer"
-        >
-          +{project.technologies.length - 3} more
-        </span>
-      </TooltipTrigger>
+            {/* ✅ More Count Badge */}
+            {project.technologies.length > 3 && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span
+                      className="px-2.5 py-1 text-[11px] font-medium 
+                               bg-gray-200 text-gray-800 
+                               rounded-full border border-gray-300 cursor-pointer"
+                    >
+                      +{project.technologies.length - 3} more
+                    </span>
+                  </TooltipTrigger>
 
-      <TooltipContent className="bg-white/90 backdrop-blur-md border border-gray-200 rounded-lg shadow-lg space-y-1">
-        <div className="flex flex-wrap gap-1 max-w-[200px]">
-          {project.technologies.slice(4).map((t) => (
-            <span
-              key={t}
-              className="px-2 py-[2px] text-[11px] bg-gray-100 border border-gray-200 rounded text-black"
-            >
-              {t}
-            </span>
-          ))}
-        </div>
-      </TooltipContent>
-    </Tooltip>
-  </TooltipProvider>
-)}
+                  <TooltipContent className="bg-white/90 backdrop-blur-md border border-gray-200 rounded-lg shadow-lg space-y-1">
+                    <div className="flex flex-wrap gap-1 max-w-[200px]">
+                      {project.technologies.slice(3).map((t, idx) => (
+                        <span
+                          key={`${t}-${idx}`}
+                          className="px-2 py-[2px] text-[11px] bg-gray-100 border border-gray-200 rounded text-black"
+                        >
+                          {t}
+                        </span>
+                      ))}
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
 
-        </div>
-
+          </div>
         <Link
           to={`/projects/${project.slug}`}
           className="text-sm font-medium text-gray-700 hover:text-black transition-colors"

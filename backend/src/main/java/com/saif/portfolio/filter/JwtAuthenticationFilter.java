@@ -12,7 +12,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.saif.portfolio.config.CustomUserDetails;
-import com.saif.portfolio.payload.ApiResponse;
+import com.saif.portfolio.dto.ApiResponse;
 import com.saif.portfolio.util.JwtUtil;
 
 import io.jsonwebtoken.JwtException;

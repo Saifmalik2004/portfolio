@@ -135,10 +135,11 @@ const BlogPage = () => {
           className="text-center mb-16"
         >
          
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Thoughts, tutorials, and insights about web development, design, and technology.
-            Sharing knowledge and experiences from my journey as a developer.
-          </p>
+         <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto px-4 sm:px-0 text-center leading-relaxed">
+  Thoughts, tutorials, and insights about web development, design, and technology.
+  Sharing knowledge and experiences from my journey as a developer.
+</p>
+
         </motion.div>
 
         {/* Blog Posts Grid */}

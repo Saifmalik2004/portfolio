@@ -1,5 +1,5 @@
 
-"use client";
+
 
 import React, { useCallback } from "react";
 import { EditorContent, useEditor } from "@tiptap/react";

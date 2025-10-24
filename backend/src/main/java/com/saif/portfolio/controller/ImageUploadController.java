@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.saif.portfolio.dto.ApiResponse;
 import com.saif.portfolio.dto.ImageUploadResponse;
-import com.saif.portfolio.payload.ApiResponse;
 import com.saif.portfolio.service.CloudinaryService;
 
 import lombok.RequiredArgsConstructor;

@@ -15,4 +15,11 @@ public interface ContactRepository extends JpaRepository<Contact, Long> {
 @Query("UPDATE Contact c SET c.read = true WHERE c.read = false")
 void markAllAsReadBulk();
 
+ @Query("SELECT COUNT(b) FROM Contact b")
+       long countContact();
+
+    @Query("SELECT COUNT(c) FROM Contact c WHERE c.read = false")
+long countUnreadMessages();
+
+
 }

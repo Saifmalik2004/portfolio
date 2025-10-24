@@ -183,7 +183,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    @Transactional
+    @Transactional(noRollbackFor = InvalidCredentialsException.class)
     public TokenResponse login(LoginRequest request, String ip) {
         log.info("Login attempt for email: {}, IP: {}", request.getEmail(), ip);
 

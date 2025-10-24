@@ -23,9 +23,9 @@ const ProjectManagement: React.FC = () => {
   const [previewProject, setPreviewProject] = useState<ProjectResponse | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<ProjectType | "all">("all");
-  const [filterTech, setFilterTech] = useState<number | "all">("all");
+  const [filterTech, setFilterTech] = useState<string | "all">("all");
   const [showOnlyLive, setShowOnlyLive] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
 
   const [isFetching, setIsFetching] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -33,7 +33,7 @@ const ProjectManagement: React.FC = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<number | null>(null);
 
-  const types = ["all", ...Object.values(ProjectType)];
+  const types: (ProjectType | "all")[] = ["all", ...(Object.values(ProjectType) as ProjectType[])];
 
   // Fetch projects and technologies on mount
   useEffect(() => {
@@ -153,7 +153,7 @@ const ProjectManagement: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gray-50">
       {viewMode === "list" && (
         <>
           <ProjectControls

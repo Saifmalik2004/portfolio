@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
-import com.saif.portfolio.payload.ApiResponse;
+import com.saif.portfolio.dto.ApiResponse;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {

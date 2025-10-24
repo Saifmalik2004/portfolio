@@ -3,11 +3,14 @@ import BlogList from "@/components/admin/blog/BlogList";
 import DeleteConfirmModal from "@/components/admin/project/DeleteConfirmModal";
 import blogService from "@/services/blogService";
 import { BlogResponse } from "@/types/blog";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { RefreshCw } from "lucide-react";
 
 const BlogManagement = () => {
   const navigate = useNavigate();
+  const hasFetched = useRef(false);
+
   const [blogs, setBlogs] = useState<BlogResponse[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
@@ -19,24 +22,31 @@ const BlogManagement = () => {
 
   const categories = ["all", ...new Set(blogs.map((blog) => blog.category))];
 
+  const fetchBlogs = async () => {
+    if (hasFetched.current) return;
+    setIsFetching(true);
+    try {
+      const data = await blogService.getAllBlogs();
+      setBlogs(data);
+      hasFetched.current = true;
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsFetching(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchBlogs = async () => {
-      setIsFetching(true);
-      try {
-        const data = await blogService.getAllBlogs();
-        setBlogs(data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setIsFetching(false);
-      }
-    };
     fetchBlogs();
   }, []);
 
   const handleAddBlog = () => navigate("/admin/blogs/new");
 
-  // BlogList navigates directly to edit/preview routes
+  const handleRefresh = async () => {
+    hasFetched.current = false;
+    setBlogs([]);
+    await fetchBlogs();
+  };
 
   const confirmDelete = async () => {
     if (blogToDelete === null) return;
@@ -59,7 +69,7 @@ const BlogManagement = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gray-50 ">
       <BlogControls
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
@@ -67,7 +77,9 @@ const BlogManagement = () => {
         setFilterCategory={setFilterCategory}
         categories={categories}
         onAdd={handleAddBlog}
+        onRefresh={handleRefresh}  // ✅ Add refresh prop
         isSaving={isSaving}
+        isFetching={isFetching}    // Optional: disable controls while fetching
       />
 
       <BlogList

@@ -10,10 +10,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.saif.portfolio.dto.ApiResponse;
 import com.saif.portfolio.dto.ForgotPasswordRequest;
 import com.saif.portfolio.dto.LoginRequest;
 import com.saif.portfolio.dto.RegisterRequest;
@@ -22,10 +22,10 @@ import com.saif.portfolio.dto.ResetPasswordRequest;
 import com.saif.portfolio.dto.TokenResponse;
 import com.saif.portfolio.dto.UserProfileDto;
 import com.saif.portfolio.dto.VerifyEmailRequest;
-import com.saif.portfolio.payload.ApiResponse;
 import com.saif.portfolio.service.AuthService;
 import com.saif.portfolio.service.UserService;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -38,10 +38,11 @@ public class AuthController {
     private final AuthService authService;
     private final UserService userService;
 
-    // ✅ Environment-based flag (change to @Value if needed)
-    private final boolean isProduction = false; // 👈 set false for localhost testing
-
     private ResponseCookie createRefreshCookie(String token, long maxAgeSeconds) {
+        // ✅ Environment-based flag (change to @Value if needed)
+        // 👈 set false for localhost testing
+        boolean isProduction = false;
+
         return ResponseCookie.from("refreshToken", token)
                 .httpOnly(true)
                 .secure(isProduction)
@@ -76,11 +77,9 @@ public class AuthController {
     // ✅ Login
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<TokenResponse>> login(
-            @Valid @RequestBody LoginRequest request,
-            @RequestHeader(value = "X-Forwarded-For", required = false) String ip,
-            HttpServletResponse response) {
+            @Valid @RequestBody LoginRequest request, HttpServletRequest servletRequest,HttpServletResponse response) {
 
-        if (ip == null) ip = "unknown";
+       String ip = extractClientIp(servletRequest);
 
         TokenResponse tokenResponse = authService.login(request, ip);
 
@@ -177,4 +176,19 @@ public class AuthController {
         TokenResponse response = authService.socialLogin(provider, providerUserId, profile);
         return ResponseEntity.ok(new ApiResponse<>(200, "Social login successful", response));
     }
+
+    private String extractClientIp(HttpServletRequest request) {
+    String ip = request.getHeader("X-Forwarded-For");
+    if (ip == null || ip.isBlank() || "unknown".equalsIgnoreCase(ip)) {
+        ip = request.getHeader("X-Real-IP");
+    }
+    if (ip == null || ip.isBlank() || "unknown".equalsIgnoreCase(ip)) {
+        ip = request.getRemoteAddr();
+    }
+    // In case multiple IPs returned, get first one
+    if (ip != null && ip.contains(",")) {
+        ip = ip.split(",")[0].trim();
+    }
+    return ip;
+}
 }

@@ -6,7 +6,7 @@ type ProjectListProps = {
   projects: ProjectResponse[];
   searchTerm: string;
   filterType: ProjectType | "all";
-  filterTech: number | "all";
+  filterTech: string | "all";
   showOnlyLive: boolean;
   isFetching: boolean;
   isSaving: boolean;
@@ -50,8 +50,8 @@ const ProjectList: React.FC<ProjectListProps> = ({
     const matchesType = filterType === "all" || project.type === filterType;
     const matchesTech =
       filterTech === "all" ||
-      project.technologies.some(
-        (t) => typeof t === "string" ? false : t === filterTech
+      project.technologies.some((t) =>
+        typeof t === "string" ? t.toLowerCase() === String(filterTech).toLowerCase() : false
       );
     const matchesLive = !showOnlyLive || project.live;
     return matchesSearch && matchesType && matchesTech && matchesLive;

@@ -30,6 +30,7 @@ import FunPage from "@/pages/public/FunPage";
 import BlogManagement from "@/pages/admin/BlogsManagementPage";
 import SkillManagement from "@/pages/admin/SkillsManagementPage";
 import BlogEditorPage from "@/pages/admin/blogs/BlogEditorPage";
+import Dashboard from "@/pages/admin/Dashboard";
 
 import ChatWidget from "@/components/ChatModel";
 import AdminLayout from "./components/public/layout/AdminLayout";
@@ -79,7 +80,7 @@ const App = () => (
                   </ProtectedRoute>
                 }
               >
-                <Route index element={<div>Dashboard Coming Soon</div>} />
+                <Route index element={<Dashboard />} />
                 <Route path="projects" element={<ProjectManagement />} />
                 <Route path="blogs">
                   <Route index element={<BlogManagement />} />

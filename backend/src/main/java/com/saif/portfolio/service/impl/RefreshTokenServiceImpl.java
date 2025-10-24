@@ -1,6 +1,7 @@
 package com.saif.portfolio.service.impl;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
@@ -11,9 +12,11 @@ import com.saif.portfolio.repository.RefreshTokenRepository;
 import com.saif.portfolio.service.RefreshTokenService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     private final RefreshTokenRepository repository;
@@ -55,8 +58,10 @@ public void revokeAllExcept(Long userId, String currentTokenHash) {
 
     @Override
     @Transactional
-    public void deleteExpiredOrRevoked(Instant before) {
-        repository.deleteExpiredOrRevoked(before);
+    public void deleteExpiredOrRevoked() {
+      Instant sevenDaysAgo = Instant.now().minus(7, ChronoUnit.DAYS);
+    int deletedCount = repository.deleteExpiredOrRevoked(sevenDaysAgo);
+    log.info("Deleted {} old or revoked refresh tokens", deletedCount);
     }
 
     @Override

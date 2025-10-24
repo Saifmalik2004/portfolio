@@ -31,4 +31,8 @@ public interface BlogRepository extends JpaRepository<Blog, Integer> {
     // ✅ Find by slug (full blog with content)
     @Query("SELECT b FROM Blog b WHERE LOWER(b.slug) = LOWER(:slug)")
     Optional<Blog> findBySlug(@Param("slug") String slug);
+
+       // ✅ Get total blog count (optimized aggregate query)
+       @Query("SELECT COUNT(b) FROM Blog b")
+       long countBlogs();
 }
