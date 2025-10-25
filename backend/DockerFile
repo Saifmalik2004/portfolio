@@ -2,22 +2,26 @@
 FROM maven:3.9-eclipse-temurin-17 AS builder
 WORKDIR /app
 
-# Copy pom.xml first (cache maven dependencies)
+# Copy pom.xml first for dependency caching
 COPY pom.xml .
 RUN mvn -q dependency:go-offline
 
-# Then copy source
+# Copy rest of the code
 COPY src ./src
 
-# Build jar
+# Build the project
 RUN mvn -q clean package -DskipTests
+
 
 # ------- Runtime Stage -------
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
-# Copy only final fat-jar
+# Copy only the final jar from builder stage
 COPY --from=builder /app/target/*.jar app.jar
 
+# Expose app port
 EXPOSE 8080
-CMD ["java", "-jar", "app.jar"]
+
+# Activate prod profile on runtime
+ENTRYPOINT ["java", "-Dspring.profiles.active=prod", "-jar", "app.jar"]

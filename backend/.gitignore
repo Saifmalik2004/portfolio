@@ -35,7 +35,7 @@ build/
 
 # Environment / Secrets
 
-application.properties
+
 
 HELP.md
 target/
@@ -74,5 +74,5 @@ build/
 
 # Environment / Secrets
 
-application.properties
+application-dev.properties
 
