@@ -1,24 +1,23 @@
-# 1. Builder stage (fat jar banane ke liye)
-FROM eclipse-temurin:17-jdk AS builder
+# ------- Builder Stage -------
+FROM maven:3.9-eclipse-temurin-17 AS builder
 WORKDIR /app
 
-# Copy maven files first to cache dependencies
+# Copy pom.xml first (cache maven dependencies)
 COPY pom.xml .
 RUN mvn -q dependency:go-offline
 
-# Ab source code copy
+# Then copy source
 COPY src ./src
 
-# Jar build karo (fat-jar)
+# Build jar
 RUN mvn -q clean package -DskipTests
 
-# 2. Runtime stage (final docker image)
+# ------- Runtime Stage -------
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
-# fat-jar copy kro builder stage se
+# Copy only final fat-jar
 COPY --from=builder /app/target/*.jar app.jar
 
 EXPOSE 8080
-
 CMD ["java", "-jar", "app.jar"]
