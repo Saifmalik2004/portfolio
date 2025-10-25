@@ -33,9 +33,12 @@ public class SecurityConfig {
 
     private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
     private final RestAccessDeniedHandler restAccessDeniedHandler;
-    @Value("${spring.cors.web.allowed-origins}")
-private String[] allowedOrigins;
+
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+
+    @Value("${spring.web.cors.allowed-origins}")
+    private String[] allowedOrigins;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
