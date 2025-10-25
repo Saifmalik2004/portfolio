@@ -33,7 +33,7 @@ public class SecurityConfig {
 
     private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
     private final RestAccessDeniedHandler restAccessDeniedHandler;
-    @Value("${cors.web.allowed.origins}")
+    @Value("${spring.cors.web.allowed-origins}")
 private String[] allowedOrigins;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
