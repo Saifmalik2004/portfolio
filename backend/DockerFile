@@ -1,14 +1,24 @@
-# Use official OpenJDK image
-FROM openjdk:17-jdk-slim
-
-# Working directory
+# 1. Builder stage (fat jar banane ke liye)
+FROM eclipse-temurin:17-jdk AS builder
 WORKDIR /app
 
-# Copy jar file (adjust name according to your build)
-COPY target/portfolio-0.0.1-SNAPSHOT.jar app.jar
+# Copy maven files first to cache dependencies
+COPY pom.xml .
+RUN mvn -q dependency:go-offline
 
-# Expose port (Spring Boot default 8080)
+# Ab source code copy
+COPY src ./src
+
+# Jar build karo (fat-jar)
+RUN mvn -q clean package -DskipTests
+
+# 2. Runtime stage (final docker image)
+FROM eclipse-temurin:17-jre-alpine
+WORKDIR /app
+
+# fat-jar copy kro builder stage se
+COPY --from=builder /app/target/*.jar app.jar
+
 EXPOSE 8080
 
-# Run the jar
-ENTRYPOINT ["java", "-jar", "app.jar"]
+CMD ["java", "-jar", "app.jar"]
