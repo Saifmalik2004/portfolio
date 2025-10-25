@@ -49,7 +49,7 @@ public class ContactServiceImpl implements ContactService {
 
     // ----------------- CREATE Method -----------------
 @Transactional
-@CacheEvict(value = {"allContactMessages", "unreadContactMessages"}, allEntries = true)
+@CacheEvict(value = {"allContactMessages", "unreadContactMessages","unreadMsgCount"}, allEntries = true)
 @Override
 public void createContact(ContactRequest request) {
     if (request == null) {
@@ -70,7 +70,7 @@ public void createContact(ContactRequest request) {
     // ----------------- MARK AS READ -----------------
     
     @Transactional
-    @CacheEvict(value = {"allContactMessages", "unreadContactMessages"}, allEntries = true)
+    @CacheEvict(value = {"allContactMessages", "unreadContactMessages","unreadMsgCount"}, allEntries = true)
     @Override
     public Contact markAsRead(Long id) {
         Contact contact = contactRepository.findById(id)
@@ -82,7 +82,7 @@ public void createContact(ContactRequest request) {
 
     // ----------------- MARK ALL AS READ -----------------
 @Transactional
-@CacheEvict(value = {"allContactMessages", "unreadContactMessages"}, allEntries = true)
+@CacheEvict(value = {"allContactMessages", "unreadContactMessages","unreadMsgCount"}, allEntries = true)
 @Override
 public String markAllAsRead() {
     List<Contact> unreadContacts = contactRepository.findByReadFalse();
@@ -98,7 +98,7 @@ public String markAllAsRead() {
 
     // ----------------- DELETE -----------------
     @Transactional
-    @CacheEvict(value = {"allContactMessages", "unreadContactMessages"}, allEntries = true)
+    @CacheEvict(value = {"allContactMessages", "unreadContactMessages","unreadMsgCount"}, allEntries = true)
     @Override
     public Contact deleteContact(Long id) {
         if (id == null) {
@@ -108,5 +108,11 @@ public String markAllAsRead() {
                 .orElseThrow(() -> new ResourceNotFoundException("Contact not found with id: " + id));
         contactRepository.deleteById(id);
         return contact;
+    }
+
+    @Override
+    @Cacheable(value = "unreadMsgCount")
+    public long getUnreadMsgCount(){
+       return contactRepository.countUnreadMessages();
     }
 }

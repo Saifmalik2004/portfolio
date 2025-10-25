@@ -32,7 +32,6 @@ import SkillManagement from "@/pages/admin/SkillsManagementPage";
 import BlogEditorPage from "@/pages/admin/blogs/BlogEditorPage";
 import Dashboard from "@/pages/admin/Dashboard";
 
-import ChatWidget from "@/components/ChatModel";
 import AdminLayout from "./components/public/layout/AdminLayout";
 import ProjectManagement from "./pages/admin/ProjectsManagementPage";
 import CertificateManagement from "./pages/admin/CertificatesManagementPage";
@@ -98,8 +97,6 @@ const App = () => (
             </Routes>
           </AnimatePresence>
 
-          {/* Global Chat Widget */}
-          <ChatWidget />
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>

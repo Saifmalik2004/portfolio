@@ -1,9 +1,9 @@
 package com.saif.portfolio.service;
 
+import java.util.List;
+
 import com.saif.portfolio.dto.ContactRequest;
 import com.saif.portfolio.model.Contact;
-
-import java.util.List;
 
 public interface ContactService {
     List<Contact> getUnreadContacts();
@@ -13,4 +13,5 @@ public interface ContactService {
     Contact markAsRead(Long id);
     String markAllAsRead();
     Contact deleteContact(Long id);
+    long getUnreadMsgCount();
 }

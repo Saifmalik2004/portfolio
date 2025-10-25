@@ -41,6 +41,14 @@ public class ContactController {
         return ResponseEntity.ok(new ApiResponse<>(200, "Unread contacts fetched successfully", responses));
     }
 
+    @GetMapping("/unread/count")
+    public ResponseEntity<ApiResponse<Long>> getUnreadCount() {
+        Long responses = contactService.getUnreadMsgCount();
+        return ResponseEntity.ok(new ApiResponse<>(200, "Unread contacts count fetched successfully", responses));
+    }
+
+
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Contact>> getContactById(@PathVariable Long id) {
         Contact response = contactService.getContactById(id);

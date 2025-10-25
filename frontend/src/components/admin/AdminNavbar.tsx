@@ -1,7 +1,10 @@
-import { useEffect, useState } from 'react';
-import { Menu, Bell, Search, User } from 'lucide-react';
-import { authService } from '@/services/authService'; // ✅ adjust the path as needed
-import type { User as UserType } from '@/types/auth';
+"use client";
+
+import { useEffect, useState } from "react";
+import { Menu, Bell, User } from "lucide-react";
+import { authService } from "@/services/authService";
+import contactService from "@/services/contactService"; // ✅ ensure this is a named export
+import type { User as UserType } from "@/types/auth";
 
 interface AdminNavbarProps {
   onMenuClick: () => void;
@@ -9,18 +12,28 @@ interface AdminNavbarProps {
 
 const AdminNavbar: React.FC<AdminNavbarProps> = ({ onMenuClick }) => {
   const [user, setUser] = useState<UserType | null>(null);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const fetchUser = async () => {
+    const fetchData = async () => {
       try {
-        const currentUser = await authService.getCurrentUser();
+        const [currentUser, count] = await Promise.all([
+          authService.getCurrentUser(),
+          contactService.getUnreadMsgCount(),
+        ]);
+
         setUser(currentUser);
+        setUnreadCount(count);
       } catch (error) {
-        console.error('Failed to fetch user:', error);
+        console.error("Failed to fetch navbar data:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchUser();
+    fetchData();
+
   }, []);
 
   return (
@@ -34,15 +47,6 @@ const AdminNavbar: React.FC<AdminNavbarProps> = ({ onMenuClick }) => {
           >
             <Menu size={20} className="text-gray-600" />
           </button>
-
-          <div className="hidden sm:flex items-center space-x-3 bg-gray-50 px-4 py-2 rounded-lg">
-            <Search size={18} className="text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search..."
-              className="bg-transparent border-none outline-none text-sm text-gray-600 placeholder-gray-400 w-48"
-            />
-          </div>
         </div>
 
         {/* Right Section */}
@@ -50,7 +54,11 @@ const AdminNavbar: React.FC<AdminNavbarProps> = ({ onMenuClick }) => {
           {/* Notifications */}
           <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors relative">
             <Bell size={20} className="text-gray-600" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full"></span>
+            {!loading && unreadCount > 0 && (
+              <span className="absolute top-1 right-1 w-4 h-4 bg-orange-500 text-white text-xs flex items-center justify-center rounded-full">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
           </button>
 
           {/* Profile */}
@@ -59,7 +67,7 @@ const AdminNavbar: React.FC<AdminNavbarProps> = ({ onMenuClick }) => {
               <User size={20} className="text-gray-600" />
             </div>
             <span className="hidden sm:inline text-sm font-medium text-gray-700">
-              {user?.fullName || 'Admin User'}
+              {user?.fullName || "Admin User"}
             </span>
           </button>
         </div>

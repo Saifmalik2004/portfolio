@@ -2,6 +2,7 @@ package com.saif.portfolio.controller;
 
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -37,11 +38,16 @@ public class AuthController {
 
     private final AuthService authService;
     private final UserService userService;
+       @Value("${app.env}")
+         private String appEnv;
 
     private ResponseCookie createRefreshCookie(String token, long maxAgeSeconds) {
         // ✅ Environment-based flag (change to @Value if needed)
         // 👈 set false for localhost testing
-        boolean isProduction = false;
+
+      
+
+      boolean isProduction = "prod".equalsIgnoreCase(appEnv);
 
         return ResponseCookie.from("refreshToken", token)
                 .httpOnly(true)

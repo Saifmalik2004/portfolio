@@ -9,8 +9,6 @@ import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
 import HorizontalRule from "@tiptap/extension-horizontal-rule";
 import Underline from "@tiptap/extension-underline";
-import { common, createLowlight } from "lowlight";
-import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import {
   Bold,
   Italic,
@@ -40,12 +38,10 @@ interface RichTextEditorProps {
 const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange }) => {
 
   
-  const lowlight = createLowlight(common);
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
         horizontalRule: false,
-        codeBlock: false,
     
       }),
       Underline,
@@ -63,12 +59,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange }) => {
         inline: false,
         allowBase64: true,
       }),
-      CodeBlockLowlight.configure({
-        lowlight,
-        HTMLAttributes: {
-          class: "bg-muted rounded-lg p-4 font-mono text-sm overflow-x-auto",
-        },
-      }),
+      
       
     ],
     content: value,

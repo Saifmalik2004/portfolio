@@ -220,7 +220,7 @@ export default function ProjectEditorWrapperIOS({
 
   return (
     <form onSubmit={handleSubmit} className="sm:p-2 max-w-4xl mx-auto">
-      <Card className="backdrop-blur-md bg-white/40 border border-white/20 shadow-lg rounded-2xl overflow-visible">
+      <Card className="relative backdrop-blur-md bg-white/40 border border-white/20 shadow-lg rounded-2xl overflow-visible">
         <CardHeader className="px-6 pt-6 pb-0">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -252,6 +252,7 @@ export default function ProjectEditorWrapperIOS({
               value={formData.title}
               onChange={handleChange}
               placeholder="My awesome project"
+              disabled={isSaving || uploading}
             />
 
             <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
@@ -262,6 +263,7 @@ export default function ProjectEditorWrapperIOS({
                   value={formData.slug}
                   onChange={handleChange}
                   placeholder="auto-generated from title"
+                  disabled={isSaving || uploading}
                 />
               </div>
 
@@ -280,6 +282,7 @@ export default function ProjectEditorWrapperIOS({
               value={formData.description}
               onChange={handleChange}
               rows={4}
+              disabled={isSaving || uploading}
             />
           </div>
 
@@ -291,6 +294,7 @@ export default function ProjectEditorWrapperIOS({
               value={formData.githubUrl}
               onChange={handleChange}
               type="url"
+              disabled={isSaving || uploading}
             />
           </div>
           <div>
@@ -300,6 +304,7 @@ export default function ProjectEditorWrapperIOS({
               value={formData.liveDemoUrl}
               onChange={handleChange}
               type="url"
+              disabled={isSaving || uploading}
             />
           </div>
 
@@ -312,6 +317,7 @@ export default function ProjectEditorWrapperIOS({
                   type="button"
                   key={t}
                   onClick={() => setFormData((p) => ({ ...p, type: t }))}
+                  disabled={isSaving || uploading}
                   className={`px-3 py-1 rounded-full border transition text-sm ${
                     formData.type === t
                       ? "bg-gradient-to-r from-sky-500 to-indigo-500 text-white shadow"
@@ -332,6 +338,7 @@ export default function ProjectEditorWrapperIOS({
                 placeholder="Search tech..."
                 value={filterTech}
                 onChange={(e) => setFilterTech(e.target.value)}
+                disabled={isSaving || uploading}
               />
               <Button
                 variant="outline"
@@ -347,6 +354,7 @@ export default function ProjectEditorWrapperIOS({
                   type="button"
                   key={tech.id}
                   onClick={() => toggleTechnology(tech.id)}
+                  disabled={isSaving || uploading}
                   className={`px-3 py-1 rounded-full border text-sm transition flex items-center gap-2 select-none ${
                     formData.technologies.includes(tech.id)
                       ? "bg-blue-600 text-white border-blue-600"
@@ -367,8 +375,9 @@ export default function ProjectEditorWrapperIOS({
                 value={newFeature}
                 onChange={(e) => setNewFeature(e.target.value)}
                 placeholder="Add a feature"
+                disabled={isSaving || uploading}
               />
-              <Button type="button" onClick={addFeature}>
+              <Button type="button" onClick={addFeature} disabled={isSaving || uploading}>
                 Add
               </Button>
             </div>
@@ -383,6 +392,7 @@ export default function ProjectEditorWrapperIOS({
                     type="button"
                     onClick={() => removeFeature(i)}
                     className="text-xs text-red-600"
+                    disabled={isSaving || uploading}
                   >
                     ✖
                   </button>
@@ -419,6 +429,7 @@ export default function ProjectEditorWrapperIOS({
                       type="button"
                       onClick={() => handleRemoveImage(img)}
                       className="bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center hover:bg-red-700 transition"
+                      disabled={isSaving || uploading}
                     >
                       ✖
                     </button>
@@ -440,6 +451,7 @@ export default function ProjectEditorWrapperIOS({
                       type="button"
                       onClick={() => handleRemoveImage(p)}
                       className="bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center hover:bg-red-700 transition"
+                      disabled={isSaving || uploading}
                     >
                       ✖
                     </button>
@@ -456,6 +468,7 @@ export default function ProjectEditorWrapperIOS({
                 <Checkbox
                   name={k}
                   checked={(formData as any)[k]}
+                  disabled={isSaving || uploading}
                   onCheckedChange={(v) =>
                     setFormData((p) => ({ ...p, [k]: Boolean(v) }))
                   }
@@ -465,6 +478,20 @@ export default function ProjectEditorWrapperIOS({
             ))}
           </div>
         </CardContent>
+
+        {/* Blocking overlay when saving/uploading */}
+        {(isSaving || uploading) && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="absolute inset-0 z-50 bg-white/60 backdrop-blur-sm flex items-center justify-center"
+          >
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-10 h-10 border-4 border-gray-200 border-t-orange-500 rounded-full animate-spin" />
+              <div className="text-sm text-gray-700">Saving project...</div>
+            </div>
+          </div>
+        )}
 
         <CardFooter className="px-6 py-4 flex justify-end gap-3">
           <Button

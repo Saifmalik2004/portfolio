@@ -14,6 +14,13 @@ class ContactService {
     return response.data.data;
   }
 
+  async getUnreadMsgCount(): Promise<number> {
+    const response = await apiClient.get<ApiResponse<number>>("/contacts/unread/count");
+    return response.data.data;
+  }
+
+  
+
   async getContactById(id: number): Promise<ContactResponse> {
     const response = await apiClient.get<ApiResponse<ContactResponse>>(`/contacts/${id}`);
     return response.data.data;

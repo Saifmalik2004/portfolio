@@ -205,7 +205,8 @@ const ProjectDetail = () => {
                   {project.title}
                 </h1>
 
-                <p className="text-xl text-gray-600 mb-6 leading-relaxed">
+               <p className="text-xl text-gray-600 mb-6 leading-relaxed whitespace-pre-line">
+
                   {project.description}
                 </p>
 
