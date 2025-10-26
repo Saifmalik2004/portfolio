@@ -25,7 +25,6 @@ import ProjectDetail from "@/pages/public/ProjectDetail";
 import BlogPage from "@/pages/public/BlogPage";
 import BlogDetail from "@/pages/public/BlogDetail";
 import CertificatesPage from "@/pages/public/CertificatesPage";
-import FunPage from "@/pages/public/FunPage";
 
 import BlogManagement from "@/pages/admin/BlogsManagementPage";
 import SkillManagement from "@/pages/admin/SkillsManagementPage";
@@ -65,7 +64,6 @@ const App = () => (
                 <Route path="/blogs" element={<BlogPage />} />
                 <Route path="/blogs/:slug" element={<BlogDetail />} />
                 <Route path="/certificates" element={<CertificatesPage />} />
-                <Route path="/fun" element={<FunPage />} />
               </Route>
 
               

@@ -21,7 +21,6 @@ const Navigation = () => {
     { path: '/projects', label: 'Projects', icon: Briefcase },
     { path: '/blogs', label: 'Blog', icon: BookOpen },
     { path: '/certificates', label: 'Certificates', icon: Award },
-    { path: '/fun', label: 'Fun', icon: Gamepad2 },
   ];
 
   return (
