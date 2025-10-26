@@ -1,29 +1,29 @@
+import React, { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import avtar1 from "/assets/images/avtar.png";
+import avtar2 from "/assets/images/avtar2.png"; // agar ek aur avatar chahiye to add kar lena
 
-import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import avtar1 from '/assets/images/avtar.png';
-import avtar2 from '/assets/images/avtar2.png';
 const testimonials = [
   {
-    name: 'David Lee',
-    role: 'CEO, Technovation Inc.',
-    image: avtar1,
-    content:
-      "Working with Larry was a dream. He took the time to understand our business and target audience, and the website he designed perfectly reflects our brand identity. Larry's ongoing support also gives us peace of mind, knowing our website is always running smoothly.",
-  },
-  {
-    name: 'David Lee',
-    role: 'CEO, Technovation Inc.',
-    image: avtar1,
-    content:
-      "Working with Larry was a dream. He took the time to understand our business and target audience, and the website he designed perfectly reflects our brand identity. Larry's ongoing support also gives us peace of mind, knowing our website is always running smoothly.",
-  },
-  {
-    name: 'Sarah Jones',
-    role: 'Marketing Manager, Green Earth Solar',
+    name: "sudhanshu Sharma",
+    role: "Founder, CodeVerse India",
     image: avtar2,
     content:
-      "Larry’s design transformed our website! It’s not just gorgeous, but it’s incredibly user-friendly too. We’ve seen a huge jump in leads since launch, and customers love the easy navigation. Larry truly exceeded our expectations!",
+      "Working with Saif was an absolute pleasure! He understood exactly what our startup needed and built a fast, responsive, and visually stunning web app. His full-stack skills with React and Spring Boot made everything seamless.",
+  },
+  {
+    name: "Vikas Yadav",
+    role: "Tech Lead, Innovix Solutions",
+    image: avtar2,
+    content:
+      "Honestly, Saif Malik is one of the most talented developers I’ve worked with. He doesn’t just code — he brings creative ideas to the table. Our project saw a huge improvement in UI/UX and overall performance.",
+  },
+  {
+    name: "Priya Mehta",
+    role: "Entrepreneur, ShopEasy India",
+    image: avtar1,
+    content:
+      "Saif ke saath kaam karna ek amazing experience tha. Unhone mere e-commerce website ko scratch se design kiya, aur ab conversions double ho gaye hain! Itna smooth aur aesthetic design maine pehli baar dekha.",
   },
 ];
 
@@ -42,17 +42,17 @@ export default function MinimalTestimonialSlider() {
   return (
     <section className="pt-11 pb-20 bg-white text-center overflow-hidden w-full">
       <h2 className="text-3xl md:text-5xl font-semibold mb-10 text-gray-900">
-        Kind words from Clients
+        Kind Words from Clients
       </h2>
 
-      <div className="relative h-[260px] md:h-[320px]">
+      <div className="relative h-[280px] md:h-[340px]">
         <AnimatePresence mode="wait">
           <motion.div
             key={index}
             initial={{ x: 100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -100, opacity: 0 }}
-            transition={{ duration: 0.5, ease: 'easeInOut' }}
+            transition={{ duration: 0.5, ease: "easeInOut" }}
             className="absolute inset-0 flex flex-col items-center justify-center"
           >
             {/* Avatar */}
@@ -74,7 +74,7 @@ export default function MinimalTestimonialSlider() {
 
             {/* Quote */}
             <p className="italic text-gray-700 max-w-5xl px-6 text-base md:text-lg leading-relaxed">
-              "{testimonials[index].content}"
+              “{testimonials[index].content}”
             </p>
           </motion.div>
         </AnimatePresence>
@@ -87,7 +87,7 @@ export default function MinimalTestimonialSlider() {
             key={i}
             onClick={() => changeTestimonial(i)}
             className={`w-3 h-3 rounded-full transition-all duration-300 ${
-              i === index ? 'bg-blue-500 scale-125' : 'bg-gray-300'
+              i === index ? "bg-blue-500 scale-125" : "bg-gray-300"
             }`}
           />
         ))}
