@@ -1,15 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useParams, Link } from "react-router-dom";
-import {
-  ArrowLeft,
-  Calendar,
-  Clock,
-  Heart,
-  MessageCircle,
-  Share2,
-  User,
-} from "lucide-react";
+import { ArrowLeft, Calendar, Clock, User } from "lucide-react";
 import blogService from "../../services/blogService";
 import { BlogResponse } from "../../types/blog";
 
@@ -18,27 +10,6 @@ const BlogDetail = () => {
   const [post, setPost] = useState<BlogResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [liked, setLiked] = useState(false);
-  const [likes, setLikes] = useState(42);
-  const [comments, setComments] = useState([
-    {
-      id: 1,
-      author: "John Doe",
-      content:
-        "Great article! Really helped me understand TypeScript better.",
-      date: "2024-01-21",
-      likes: 5,
-    },
-    {
-      id: 2,
-      author: "Jane Smith",
-      content:
-        "The examples are very clear and practical. Thanks for sharing!",
-      date: "2024-01-21",
-      likes: 3,
-    },
-  ]);
-  const [newComment, setNewComment] = useState("");
 
   useEffect(() => {
     const fetchBlog = async () => {
@@ -94,26 +65,6 @@ const BlogDetail = () => {
     );
   }
 
-  const handleLike = () => {
-    setLiked(!liked);
-    setLikes((prev) => (liked ? prev - 1 : prev + 1));
-  };
-
-  const handleCommentSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newComment.trim()) {
-      const comment = {
-        id: comments.length + 1,
-        author: "Guest User",
-        content: newComment,
-        date: new Date().toISOString().split("T")[0],
-        likes: 0,
-      };
-      setComments([...comments, comment]);
-      setNewComment("");
-    }
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -149,42 +100,23 @@ const BlogDetail = () => {
               {post.category}
             </span>
           </div>
+
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 text-gray-900 leading-snug break-words">
             {post.title}
           </h1>
 
-          <div className="flex flex-wrap items-center justify-between text-gray-500 mb-6 sm:mb-8 text-sm sm:text-base gap-3">
-            <div className="flex flex-wrap items-center gap-3 sm:gap-6">
-              <div className="flex items-center gap-2">
-                <User size={14} />
-                <span>{post.author}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Calendar size={14} />
-                <span>{new Date(post.createdAt).toLocaleDateString()}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock size={14} />
-                <span>{post.readTime}</span>
-              </div>
+          <div className="flex flex-wrap items-center text-gray-500 mb-6 sm:mb-8 text-sm sm:text-base gap-3">
+            <div className="flex items-center gap-2">
+              <User size={14} />
+              <span>{post.author}</span>
             </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                onClick={handleLike}
-                className={`flex items-center gap-2 px-3 py-1 rounded-full transition-colors ${
-                  liked
-                    ? "text-red-500 bg-red-50"
-                    : "text-gray-500 hover:text-red-500"
-                }`}
-              >
-                <Heart size={14} fill={liked ? "currentColor" : "none"} />
-                <span>{likes}</span>
-              </button>
-              <button className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">
-                <Share2 size={14} />
-                <span>Share</span>
-              </button>
+            <div className="flex items-center gap-2">
+              <Calendar size={14} />
+              <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Clock size={14} />
+              <span>{post.readTime}</span>
             </div>
           </div>
 
@@ -201,73 +133,6 @@ const BlogDetail = () => {
         <div className="prose prose-orange max-w-none text-black prose-sm sm:prose-base break-words">
           <div dangerouslySetInnerHTML={{ __html: post.content }} />
         </div>
-
-        {/* Comments Section */}
-        <motion.section
-          initial={{ y: 50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="border-t border-gray-200 pt-10 sm:pt-12 mt-10"
-        >
-          <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6 sm:mb-8 flex items-center gap-2">
-            <MessageCircle size={20} />
-            <span>Comments ({comments.length})</span>
-          </h3>
-
-          {/* Comment Form */}
-          <form onSubmit={handleCommentSubmit} className="mb-8">
-            <textarea
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder="Share your thoughts..."
-              className="w-full p-3 sm:p-4 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 resize-none text-sm sm:text-base"
-              rows={4}
-            />
-            <button
-              type="submit"
-              className="mt-3 sm:mt-4 px-5 sm:px-6 py-2 sm:py-2.5 bg-orange-500 text-white rounded-xl font-medium hover:bg-orange-600 transition-colors text-sm sm:text-base"
-            >
-              Post Comment
-            </button>
-          </form>
-
-          {/* Comments List */}
-          <div className="space-y-5 sm:space-y-6">
-            {comments.map((comment) => (
-              <motion.div
-                key={comment.id}
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                className="bg-gray-50 rounded-xl p-4 sm:p-6 border border-gray-100"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                      <User size={14} className="text-orange-600" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900 text-sm sm:text-base">
-                        {comment.author}
-                      </p>
-                      <p className="text-xs sm:text-sm text-gray-500">
-                        {new Date(comment.date).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                  <button className="flex items-center gap-1 text-gray-500 hover:text-red-500 transition-colors">
-                    <Heart size={12} />
-                    <span className="text-xs sm:text-sm">
-                      {comment.likes}
-                    </span>
-                  </button>
-                </div>
-                <p className="text-gray-700 text-sm sm:text-base break-words">
-                  {comment.content}
-                </p>
-              </motion.div>
-            ))}
-          </div>
-        </motion.section>
       </div>
     </motion.div>
   );
