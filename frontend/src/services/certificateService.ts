@@ -32,5 +32,5 @@ class CertificateService {
   }
 }
 
-const skillService = new CertificateService();
-export default skillService;
+const certificateService = new CertificateService();
+export default certificateService;
