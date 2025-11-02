@@ -1,11 +1,12 @@
 {
-  "name": "Saif Malik Portfolio",
-  "short_name": "Portfolio",
-  "start_url": ".",
+  "name": "Saif Malik | Full-Stack Developer",
+  "short_name": "Saif Malik",
+  "description": "Explore Saif Malik's stunning interactive portfolio showcasing modern web projects.",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
-  "description": "A modern, responsive portfolio by Saif Malik.",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "/assets/images/logowo.png",
