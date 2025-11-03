@@ -2,19 +2,22 @@
   "name": "Saif Malik | Full-Stack Developer",
   "short_name": "Saif Malik",
   "description": "Explore Saif Malik's stunning interactive portfolio showcasing modern web projects.",
+  "id": "/",
+  "scope": "/",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
   "orientation": "portrait",
+  "lang": "en",
   "icons": [
     {
-      "src": "/assets/images/logowo.png",
+      "src": "https://saifmalik.me/assets/images/logowo.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/assets/images/logowo.png",
+      "src": "https://saifmalik.me/assets/images/logowo.png",
       "sizes": "512x512",
       "type": "image/png"
     }
