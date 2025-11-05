@@ -3,8 +3,6 @@ import { motion } from 'framer-motion';
 import { Instagram, Linkedin, Github, Mail } from 'lucide-react';
 
 const Footer = () => {
- 
-
   const socialLinks = [
     { icon: Github, href: 'https://github.com/Saifmalik2004', label: 'GitHub' },
     { icon: Linkedin, href: 'https://www.linkedin.com/in/saif-malik7827/', label: 'LinkedIn' },
@@ -20,7 +18,9 @@ const Footer = () => {
             <h3 className="text-2xl font-bold text-gray-900 mb-2">
               Let's Connect
             </h3>
-            <p className="text-gray-600">Building amazing digital experiences</p>
+            <p className="text-gray-600">
+              Building amazing digital experiences
+            </p>
           </div>
 
           <div className="flex space-x-6">
@@ -29,9 +29,13 @@ const Footer = () => {
                 key={label}
                 href={href}
                 aria-label={label}
+                target="_blank"                // ✅ Opens in new tab
+                rel="noopener noreferrer"      // ✅ Prevents security leaks
                 whileHover={{ scale: 1.2, rotateY: 180 }}
                 whileTap={{ scale: 0.9 }}
-                className="p-3 bg-gray-200 text-black rounded-full hover:bg-orange-500 hover:text-white transition-colors"
+                className="p-3 bg-gray-200 text-black rounded-full 
+                           hover:bg-orange-500 hover:text-white 
+                           transition-colors"
               >
                 <Icon size={20} />
               </motion.a>
@@ -43,8 +47,6 @@ const Footer = () => {
           <p className="text-gray-500 text-sm">
             © {new Date().getFullYear()} Portfolio. All rights reserved.
           </p>
-          
-        
         </div>
       </div>
     </footer>

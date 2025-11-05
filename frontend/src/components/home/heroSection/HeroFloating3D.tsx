@@ -1,11 +1,11 @@
 import React from 'react';
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
-import circle from '/assets/images/circle.avif';
-import square from '/assets/images/square.avif';
-import cylinder from '/assets/images/bigsylinder.avif';
-import oval from '/assets/images/cylinder.avif';
-import triangle from '/assets/images/triangle.avif';
-import star from '/assets/images/star.avif';
+import circle from '/assets/images/circle.webp';
+import square from '/assets/images/square.webp';
+import cylinder from '/assets/images/bigsylinder.webp';
+import oval from '/assets/images/cylinder.webp';
+import triangle from '/assets/images/triangle.webp';
+import star from '/assets/images/star.webp';
 
 const HeroFloating3D = () => {
   const { scrollYProgress } = useScroll();
@@ -20,7 +20,8 @@ const HeroFloating3D = () => {
       alt: '3D Design 1',
       position: 'top-[40px] left-[200px]',
       size: 'w-[280px] h-[280px]',
-      delay: 0
+      delay: 0,
+      hideOnMobile: false
     },
     {
       id: 2,
@@ -28,7 +29,9 @@ const HeroFloating3D = () => {
       alt: '3D Design 2',
       position: 'top-1/3 left-[100px]',
       size: 'w-[280px] h-[280px]',
-      delay: 0.5
+      delay: 0.5,
+      hideOnMobile: true
+
     },
     {
       id: 3,
@@ -36,7 +39,8 @@ const HeroFloating3D = () => {
       alt: '3D Design 3',
       position: 'bottom-[-10px] left-[200px]',
       size: 'w-[280px] h-[280px]',
-      delay: 1
+      delay: 1,
+      hideOnMobile: false
     }
   ];
 
@@ -47,7 +51,8 @@ const HeroFloating3D = () => {
       alt: '3D Design 4',
       position: 'top-1/3 right-[100px]',
       size: 'w-[280px] h-[280px]',
-      delay: 1.5
+      delay: 1.5,
+      hideOnMobile: true
     },
     {
       id: 5,
@@ -55,7 +60,8 @@ const HeroFloating3D = () => {
       alt: '3D Design 5',
       position: 'bottom-[-10px] right-[200px]',
       size: 'w-[280px] h-[280px]',
-      delay: 2
+      delay: 2,
+      hideOnMobile: false
     },
     {
       id: 6,
@@ -63,7 +69,8 @@ const HeroFloating3D = () => {
       alt: '3D Design 6',
       position: 'top-[40px] right-[200px]',
       size: 'w-[280px] h-[280px]',
-      delay: 2.5
+      delay: 2.5,
+      hideOnMobile: false
     }
   ];
 
@@ -74,7 +81,7 @@ const HeroFloating3D = () => {
       {allImages.map((image) => (
         <motion.div
           key={image.id}
-          className={`absolute ${image.position} ${image.size}`}
+          className={`absolute ${image.position} ${image.size} ${image.hideOnMobile ? 'hidden sm:block' : ''}`}
           style={{ y: smoothScrollY }}
           initial={{ scale: 0.6, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}

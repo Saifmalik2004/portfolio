@@ -1,10 +1,13 @@
-import { AnimatePresence, motion } from 'framer-motion';
+// components/home/heroSection/TextSlider.tsx
+
+import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 
 const rotatingTexts = [
   "Full Stack Developer",
   "UI/UX Designer",
   "Creative Coder",
+  "Full Stack Developer", // Duplicate first for seamless loop back
 ];
 
 const TextSlider = () => {
@@ -12,25 +15,30 @@ const TextSlider = () => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setIndex(prev => (prev + 1) % rotatingTexts.length);
-    }, 3000); // 3 seconds delay
+      setIndex((prev) => {
+        const next = (prev + 1) % rotatingTexts.length;
+        if (next === 0) {
+          // When looping back, skip animation or instant reset, but since duplicated, it flows
+          return next;
+        }
+        return next;
+      });
+    }, 3000);
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className="relative h-10 sm:h-12 overflow-hidden ">
-      <AnimatePresence mode="wait">
-        <motion.p
-          key={rotatingTexts[index]}
-          initial={{ y: -40, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 40, opacity: 0 }}
-          transition={{ duration: 0.6 }}
-          className="absolute w-full text-center text-xl text-gray-600"
-        >
-          {rotatingTexts[index]}
-        </motion.p>
-      </AnimatePresence>
+    <div className="relative h-8 sm:h-10 lg:h-12 overflow-hidden">
+      <motion.div
+        key={rotatingTexts[index]}
+        initial={{ y: '100%', opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: '-100%', opacity: 0 }}
+        transition={{ duration: 0.5, ease: 'easeInOut' }}
+        className="absolute w-full text-center text-lg sm:text-xl lg:text-2xl text-gray-600"
+      >
+        {rotatingTexts[index]}
+      </motion.div>
     </div>
   );
 };

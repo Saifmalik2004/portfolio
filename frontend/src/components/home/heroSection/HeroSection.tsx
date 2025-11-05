@@ -35,9 +35,9 @@ const HeroSection = () => {
       <HeroScrollingText />
       <HeroFloating3D />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 ">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
         <div className="mb-0">
-          <h1 className="text-4xl lg:text-[48px] font-bold mt-6 mb-2 text-gray-900">
+          <h1 className="text-3xl sm:text-4xl lg:text-[48px] font-bold mt-6 mb-2 text-gray-900">
             Hi, I'm <span className="italic">Saif</span>!
           </h1>
           <TextSlider />
@@ -54,16 +54,16 @@ const HeroSection = () => {
           <Link
             to="#Contact"
             onClick={handleWorkTogetherClick}
-            className="px-8 py-4 bg-orange-500 text-white rounded-full font-medium hover:bg-orange-600 transition-colors flex items-center justify-center space-x-2"
+            className="px-6 sm:px-8 py-3 sm:py-4 bg-orange-500 text-white rounded-full font-medium hover:bg-orange-600 transition-colors flex items-center justify-center space-x-2 text-sm sm:text-base"
           >
             <span>Let's Work Together!</span>
           </Link>
 
           <button
             onClick={handleDownloadResume}
-            className="px-8 py-4 border-2 border-gray-300 text-gray-700 rounded-full font-medium hover:bg-gray-50 transition-colors flex items-center justify-center space-x-2"
+            className="px-6 sm:px-8 py-3 sm:py-4 border-2 border-gray-300 text-gray-700 rounded-full font-medium hover:bg-gray-50 transition-colors flex items-center justify-center space-x-2 text-sm sm:text-base"
           >
-            <Download size={20} />
+            <Download size={16} className="sm:w-5 sm:h-5" />
             <span>Download Resume</span>
           </button>
         </motion.div>
