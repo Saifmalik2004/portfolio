@@ -26,7 +26,7 @@ const ProjectsPage = () => {
       try {
         const [skills, proj] = await Promise.all([
           skillService.getAllSkills(),
-          projectService.getAllProjects(),
+          projectService.getAllSimpleProjects(),
         ]);
         setAvailableSkills(skills.map((s) => ({ name: s.name })));
         setProjects(proj);

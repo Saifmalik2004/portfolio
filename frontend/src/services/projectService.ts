@@ -1,13 +1,19 @@
 import { apiClient } from "../lib/apiClient";
 
 import { ApiResponse } from "../types/api";
-import { ProjectRequest, ProjectResponse } from "../types/project";
+import { ProjectRequest, ProjectResponse, SimpleProject } from "../types/project";
 
 class ProjectService {
   async getAllProjects(): Promise<ProjectResponse[]> {
     const response = await apiClient.get<ApiResponse<ProjectResponse[]>>("/projects");
     return response.data.data;
   }
+
+  async getAllSimpleProjects(): Promise<SimpleProject[]> {
+    const response = await apiClient.get<ApiResponse<SimpleProject[]>>("/projects/simple");
+    return response.data.data;
+  }
+
   async getAllFeaturedProjects(): Promise<ProjectResponse[]> {
     const response = await apiClient.get<ApiResponse<ProjectResponse[]>>("/projects/featured");
     return response.data.data;

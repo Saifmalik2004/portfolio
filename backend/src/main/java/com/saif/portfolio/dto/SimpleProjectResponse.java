@@ -1,15 +1,24 @@
 package com.saif.portfolio.dto;
 
-public record SimpleProjectResponse(
-    Integer id,
-    String title,
-    String slug,
-    String description,
-    String githubUrl,
-    String liveDemoUrl,
-    boolean live,
-    boolean published,
-    boolean featured,
-    String type,
-    String imageUrl
-) {}
+import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class SimpleProjectResponse {
+    private Integer id;
+    private String title;
+    private String slug;
+    private String description;
+    private String githubUrl;
+    private String liveDemoUrl;
+    private boolean live;
+    private boolean published;
+    private boolean featured;
+    private String type;
+    private String imageUrl;
+    private List<String> technologies; // ✅ ab array of strings
+}

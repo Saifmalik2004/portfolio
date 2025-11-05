@@ -16,24 +16,28 @@ public interface ProjectRepository extends JpaRepository<Project, Integer> {
     List<Project> findByType(ProjectType type);
     List<Project> findByFeaturedTrue();
 
-    @Query("""
-    SELECT new com.saif.portfolio.dto.SimpleProjectResponse(
-        p.id,
-        p.title,
-        p.slug,
-        p.description,
-        p.githubUrl,
-        p.liveDemoUrl,
-        p.live,
-        p.published,
-        p.featured,
-        CAST(p.type AS string),
-        (SELECT i.url FROM ProjectImage i WHERE i.project.id = p.id ORDER BY i.id ASC LIMIT 1)
-    )
-    FROM Project p
-""")
-List<SimpleProjectResponse> findAllSimplified();
-
+     // Native SQL query for fastest listing
+    @Query(value = """
+        SELECT 
+            p.id,
+            p.title,
+            p.slug,
+            p.description,
+            p.github_url AS githubUrl,
+            p.live_demo_url AS liveDemoUrl,
+            p.live,
+            p.published,
+            p.featured,
+            p.type,
+            (SELECT i.url FROM project_images i WHERE i.project_id = p.id ORDER BY i.id ASC LIMIT 1) AS imageUrl,
+            COALESCE(STRING_AGG(s.name, ','), '') AS technologies
+        FROM projects p
+        LEFT JOIN project_technologies pt ON p.id = pt.project_id
+        LEFT JOIN skills s ON pt.skill_id = s.id
+        GROUP BY p.id
+        ORDER BY p.id DESC
+        """, nativeQuery = true)
+    List<Object[]> findAllSimpleProjectsNative();
 
 
     // ✅ Total projects count

@@ -45,3 +45,18 @@ export interface ProjectResponse {
   createdAt: string; 
   updatedAt: string;
 }
+
+export interface SimpleProject {
+  id: number;
+  title: string;
+  slug: string;
+  description: string;
+  githubUrl?: string;
+  liveDemoUrl?: string;
+  live?: boolean;
+  published?: boolean;
+  featured?: boolean;
+  type: ProjectType;
+  technologies: string[]; 
+  imageUrl: string;
+}

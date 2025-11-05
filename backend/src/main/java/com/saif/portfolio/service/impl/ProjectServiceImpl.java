@@ -44,10 +44,27 @@ public class ProjectServiceImpl implements ProjectService {
     }
     
     @Override
-    @Cacheable(value = "allSimpleProjects")
-    public List<SimpleProjectResponse> getAllSimpleProjectResponses(){
-        return projectRepository.findAllSimplified();
-    }
+@Cacheable(value = "allSimpleProjects")
+public List<SimpleProjectResponse> getAllSimpleProjectResponses() {
+    List<Object[]> results = projectRepository.findAllSimpleProjectsNative();
+
+    return results.stream().map(row -> new SimpleProjectResponse(
+            ((Number) row[0]).intValue(),    // id
+            (String) row[1],                 // title
+            (String) row[2],                 // slug
+            (String) row[3],                 // description
+            (String) row[4],                 // githubUrl
+            (String) row[5],                 // liveDemoUrl
+            (Boolean) row[6],                // live
+            (Boolean) row[7],                // published
+            (Boolean) row[8],                // featured
+            (String) row[9],                 // type
+            (String) row[10],                // imageUrl
+            ((String) row[11]).isBlank() ? List.of() :
+                List.of(((String) row[11]).split(",")) // ✅ Convert comma-separated to List<String>
+    )).toList();
+}
+
 
     @Cacheable(value = "featuredProjects")
     @Override

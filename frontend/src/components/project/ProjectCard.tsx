@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ExternalLink } from "lucide-react";
 import { FaGithub } from "react-icons/fa";
-import { ProjectResponse } from "@/types/project";
+import { SimpleProject } from "@/types/project";
 import {
   Tooltip,
   TooltipContent,
@@ -12,7 +12,7 @@ import {
 } from "../ui/tooltip";
 
 interface ProjectCardProps {
-  project: ProjectResponse;
+  project: SimpleProject;
   index: number;
 }
 
@@ -33,7 +33,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index }) => {
         {/* ✅ Cover Image */}
         <div className="relative overflow-hidden">
           <img
-            src={project.images?.[0]?.url || "/assets/images/placeholder.jpg"}
+            src={project.imageUrl || "/assets/images/placeholder.jpg"}
             alt={project.title}
             className="w-full h-56 object-cover transition-transform duration-300 group-hover:scale-105"
           />
