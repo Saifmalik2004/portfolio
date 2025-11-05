@@ -73,7 +73,7 @@ public class SkillServiceImpl {
             throw new IllegalArgumentException("Skill with name '" + skillData.getName() + "' already exists");
         }
 
-        skill.setName(skillData.getName().toLowerCase());
+        skill.setName(skillData.getName());
         skill.setCategory(skillData.getCategory());
         skill.setPriority(skillData.getPriority());
         skill.setIconUrl(skillData.getIconUrl());

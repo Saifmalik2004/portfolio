@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.saif.portfolio.dto.ApiResponse;
 import com.saif.portfolio.dto.ProjectRequest;
 import com.saif.portfolio.dto.ProjectResponse;
+import com.saif.portfolio.dto.SimpleProjectResponse;
 import com.saif.portfolio.model.ProjectType;
 import com.saif.portfolio.service.impl.ProjectServiceImpl;
 
@@ -31,6 +32,12 @@ public class ProjectController {
     @GetMapping
     public ResponseEntity<ApiResponse<List<ProjectResponse>>> getAllProjects() {
         List<ProjectResponse> responses = projectService.getAllProjects();
+        return ResponseEntity.ok(new ApiResponse<>(200, "Projects fetched successfully", responses));
+    }
+
+    @GetMapping("/simple")
+    public ResponseEntity<ApiResponse<List<SimpleProjectResponse>>> getSimplifyProjects() {
+        List<SimpleProjectResponse> responses = projectService.getAllSimpleProjectResponses();
         return ResponseEntity.ok(new ApiResponse<>(200, "Projects fetched successfully", responses));
     }
 

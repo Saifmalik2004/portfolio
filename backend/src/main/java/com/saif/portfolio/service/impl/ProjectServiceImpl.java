@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import com.saif.portfolio.dto.ImageUploadResponse;
 import com.saif.portfolio.dto.ProjectRequest;
 import com.saif.portfolio.dto.ProjectResponse;
+import com.saif.portfolio.dto.SimpleProjectResponse;
 import com.saif.portfolio.exception.ResourceNotFoundException;
 import com.saif.portfolio.model.Project;
 import com.saif.portfolio.model.ProjectImage;
@@ -40,6 +41,11 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public List<ProjectResponse> getAllProjects() {
         return projectRepository.findAll().stream().map(this::toProjectResponse).toList();
+    }
+
+    @Override
+    public List<SimpleProjectResponse> getAllSimpleProjectResponses(){
+        return projectRepository.findAllSimplified();
     }
 
     @Cacheable(value = "featuredProjects")
