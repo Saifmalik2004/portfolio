@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Suspense, lazy } from "react";
 
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -9,13 +10,18 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 import PublicLayout from "@/components/public/layout/PublicLayout";
+import BackendLoader from "@/components/Loading";
+import { useBackendWakeup } from "@/hooks/use-loader";
 
-import Login from "./pages/auth/Login";
-import Register from "./pages/auth/RegisterPage";
-import VerifyEmail from "./pages/auth/VerifyEmailPage";
-import ForgotPassword from "./pages/auth/ForgotPassword";
-import ResetPassword from "./pages/auth/ResetPassword";
-import NotFound from "./pages/public/NotFound";
+/* =======================
+   Auth & Public Pages
+======================= */
+import Login from "@/pages/auth/Login";
+import Register from "@/pages/auth/RegisterPage";
+import VerifyEmail from "@/pages/auth/VerifyEmailPage";
+import ForgotPassword from "@/pages/auth/ForgotPassword";
+import ResetPassword from "@/pages/auth/ResetPassword";
+import NotFound from "@/pages/public/NotFound";
 
 import HomePage from "@/pages/public/HomePage";
 import ProjectsPage from "@/pages/public/ProjectsPage";
@@ -24,38 +30,50 @@ import BlogPage from "@/pages/public/BlogPage";
 import BlogDetail from "@/pages/public/BlogDetail";
 import CertificatesPage from "@/pages/public/CertificatesPage";
 
-import BlogManagement from "@/pages/admin/BlogsManagementPage";
-import SkillManagement from "@/pages/admin/SkillsManagementPage";
-import BlogEditorPage from "@/pages/admin/blogs/BlogEditorPage";
-import Dashboard from "@/pages/admin/Dashboard";
-
-import AdminLayout from "./components/public/layout/AdminLayout";
-import ProjectManagement from "./pages/admin/ProjectsManagementPage";
-import CertificateManagement from "./pages/admin/CertificatesManagementPage";
-import ContactManagement from "./pages/admin/ContactsManagementPage";
-import { useBackendWakeup } from "./hooks/use-loader";
-import BackendLoader from "./components/Loading";
+/* =======================
+   🔥 Lazy Admin Pages
+======================= */
+const AdminLayout = lazy(
+  () => import("@/components/public/layout/AdminLayout")
+);
+const Dashboard = lazy(() => import("@/pages/admin/Dashboard"));
+const ProjectManagement = lazy(
+  () => import("@/pages/admin/ProjectsManagementPage")
+);
+const BlogManagement = lazy(
+  () => import("@/pages/admin/BlogsManagementPage")
+);
+const BlogEditorPage = lazy(
+  () => import("@/pages/admin/blogs/BlogEditorPage")
+);
+const SkillManagement = lazy(
+  () => import("@/pages/admin/SkillsManagementPage")
+);
+const CertificateManagement = lazy(
+  () => import("@/pages/admin/CertificatesManagementPage")
+);
+const ContactManagement = lazy(
+  () => import("@/pages/admin/ContactsManagementPage")
+);
 
 const queryClient = new QueryClient();
 
 const App = () => {
   const loading = useBackendWakeup();
 
-  if (loading) {
-    return <BackendLoader />;
-  }
+  if (loading) return <BackendLoader />;
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>
-          {/* Global Toasters */}
           <Toaster />
           <Sonner />
 
           <BrowserRouter>
             <AnimatePresence mode="wait">
               <Routes>
-                {/* ✅ Auth Routes */}
+                {/* ================= Auth Routes ================= */}
                 <Route path="/auth/login" element={<Login />} />
                 <Route path="/auth/register" element={<Register />} />
                 <Route path="/auth/verify-email" element={<VerifyEmail />} />
@@ -68,45 +86,112 @@ const App = () => {
                   element={<ResetPassword />}
                 />
 
-                {/* ✅ Public Routes */}
+                {/* ================= Public Routes ================= */}
                 <Route element={<PublicLayout />}>
                   <Route path="/" element={<HomePage />} />
                   <Route path="/projects" element={<ProjectsPage />} />
-                  <Route path="/projects/:slug" element={<ProjectDetail />} />
+                  <Route
+                    path="/projects/:slug"
+                    element={<ProjectDetail />}
+                  />
                   <Route path="/blogs" element={<BlogPage />} />
                   <Route path="/blogs/:slug" element={<BlogDetail />} />
-                  <Route path="/certificates" element={<CertificatesPage />} />
+                  <Route
+                    path="/certificates"
+                    element={<CertificatesPage />}
+                  />
                 </Route>
 
-                {/* ✅ Admin Routes (protected) */}
+                {/* ================= 🔥 Admin Routes (Split) ================= */}
                 <Route
                   path="/admin"
                   element={
                     <ProtectedRoute requireAdmin>
-                      <AdminLayout />
+                      <Suspense fallback={<BackendLoader />}>
+                        <AdminLayout />
+                      </Suspense>
                     </ProtectedRoute>
                   }
                 >
-                  <Route index element={<Dashboard />} />
-                  <Route path="projects" element={<ProjectManagement />} />
+                  <Route
+                    index
+                    element={
+                      <Suspense fallback={<BackendLoader />}>
+                        <Dashboard />
+                      </Suspense>
+                    }
+                  />
+
+                  <Route
+                    path="projects"
+                    element={
+                      <Suspense fallback={<BackendLoader />}>
+                        <ProjectManagement />
+                      </Suspense>
+                    }
+                  />
+
                   <Route path="blogs">
-                    <Route index element={<BlogManagement />} />
-                    <Route path="new" element={<BlogEditorPage />} />
-                    <Route path=":id/edit" element={<BlogEditorPage />} />
+                    <Route
+                      index
+                      element={
+                        <Suspense fallback={<BackendLoader />}>
+                          <BlogManagement />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path="new"
+                      element={
+                        <Suspense fallback={<BackendLoader />}>
+                          <BlogEditorPage />
+                        </Suspense>
+                      }
+                    />
+                    <Route
+                      path=":id/edit"
+                      element={
+                        <Suspense fallback={<BackendLoader />}>
+                          <BlogEditorPage />
+                        </Suspense>
+                      }
+                    />
                   </Route>
-                  <Route path="skills" element={<SkillManagement />} />
+
+                  <Route
+                    path="skills"
+                    element={
+                      <Suspense fallback={<BackendLoader />}>
+                        <SkillManagement />
+                      </Suspense>
+                    }
+                  />
+
                   <Route
                     path="certificates"
-                    element={<CertificateManagement />}
+                    element={
+                      <Suspense fallback={<BackendLoader />}>
+                        <CertificateManagement />
+                      </Suspense>
+                    }
                   />
-                  <Route path="contacts" element={<ContactManagement />} />
+
+                  <Route
+                    path="contacts"
+                    element={
+                      <Suspense fallback={<BackendLoader />}>
+                        <ContactManagement />
+                      </Suspense>
+                    }
+                  />
+
                   <Route
                     path="settings"
                     element={<div>Settings Coming Soon</div>}
                   />
                 </Route>
 
-                {/* Catch-All */}
+                {/* ================= Catch All ================= */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </AnimatePresence>
