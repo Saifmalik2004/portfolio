@@ -10,8 +10,6 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 import PublicLayout from "@/components/public/layout/PublicLayout";
 
-
-
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/RegisterPage";
 import VerifyEmail from "./pages/auth/VerifyEmailPage";
@@ -35,70 +33,88 @@ import AdminLayout from "./components/public/layout/AdminLayout";
 import ProjectManagement from "./pages/admin/ProjectsManagementPage";
 import CertificateManagement from "./pages/admin/CertificatesManagementPage";
 import ContactManagement from "./pages/admin/ContactsManagementPage";
+import { useBackendWakeup } from "./hooks/use-loader";
+import BackendLoader from "./components/Loading";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        {/* Global Toasters */}
-        <Toaster />
-        <Sonner />
+const App = () => {
+  const loading = useBackendWakeup();
 
-        <BrowserRouter>
-          <AnimatePresence mode="wait">
-            <Routes>
-              {/* ✅ Auth Routes */}
-              <Route path="/auth/login" element={<Login />} />
-              <Route path="/auth/register" element={<Register />} />
-              <Route path="/auth/verify-email" element={<VerifyEmail />} />
-              <Route path="/auth/forgot-password" element={<ForgotPassword />} />
-              <Route path="/auth/reset-password" element={<ResetPassword />} />
+  if (loading) {
+    return <BackendLoader />;
+  }
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TooltipProvider>
+          {/* Global Toasters */}
+          <Toaster />
+          <Sonner />
 
-              {/* ✅ Public Routes */}
-              <Route element={<PublicLayout />}>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/projects" element={<ProjectsPage />} />
-                <Route path="/projects/:slug" element={<ProjectDetail />} />
-                <Route path="/blogs" element={<BlogPage />} />
-                <Route path="/blogs/:slug" element={<BlogDetail />} />
-                <Route path="/certificates" element={<CertificatesPage />} />
-              </Route>
+          <BrowserRouter>
+            <AnimatePresence mode="wait">
+              <Routes>
+                {/* ✅ Auth Routes */}
+                <Route path="/auth/login" element={<Login />} />
+                <Route path="/auth/register" element={<Register />} />
+                <Route path="/auth/verify-email" element={<VerifyEmail />} />
+                <Route
+                  path="/auth/forgot-password"
+                  element={<ForgotPassword />}
+                />
+                <Route
+                  path="/auth/reset-password"
+                  element={<ResetPassword />}
+                />
 
-              
-
-              {/* ✅ Admin Routes (protected) */}
-              <Route
-                path="/admin"
-                element={
-                  <ProtectedRoute requireAdmin>
-                    <AdminLayout />
-                  </ProtectedRoute>
-                }
-              >
-                <Route index element={<Dashboard />} />
-                <Route path="projects" element={<ProjectManagement />} />
-                <Route path="blogs">
-                  <Route index element={<BlogManagement />} />
-                  <Route path="new" element={<BlogEditorPage />} />
-                  <Route path=":id/edit" element={<BlogEditorPage />} />
+                {/* ✅ Public Routes */}
+                <Route element={<PublicLayout />}>
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/projects" element={<ProjectsPage />} />
+                  <Route path="/projects/:slug" element={<ProjectDetail />} />
+                  <Route path="/blogs" element={<BlogPage />} />
+                  <Route path="/blogs/:slug" element={<BlogDetail />} />
+                  <Route path="/certificates" element={<CertificatesPage />} />
                 </Route>
-                <Route path="skills" element={<SkillManagement />} />
-                <Route path="certificates" element={<CertificateManagement />} />
-                <Route path="contacts" element={<ContactManagement />} />
-                <Route path="settings" element={<div>Settings Coming Soon</div>} />
-              </Route>
 
-              {/* Catch-All */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </AnimatePresence>
+                {/* ✅ Admin Routes (protected) */}
+                <Route
+                  path="/admin"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <AdminLayout />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route index element={<Dashboard />} />
+                  <Route path="projects" element={<ProjectManagement />} />
+                  <Route path="blogs">
+                    <Route index element={<BlogManagement />} />
+                    <Route path="new" element={<BlogEditorPage />} />
+                    <Route path=":id/edit" element={<BlogEditorPage />} />
+                  </Route>
+                  <Route path="skills" element={<SkillManagement />} />
+                  <Route
+                    path="certificates"
+                    element={<CertificateManagement />}
+                  />
+                  <Route path="contacts" element={<ContactManagement />} />
+                  <Route
+                    path="settings"
+                    element={<div>Settings Coming Soon</div>}
+                  />
+                </Route>
 
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
-);
+                {/* Catch-All */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </AnimatePresence>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
