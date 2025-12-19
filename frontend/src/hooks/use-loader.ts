@@ -10,7 +10,7 @@ export const useBackendWakeup = () => {
     const wakeBackend = async () => {
       try {
         // 🔥 health nahi, ABOUT hi hit hoga
-        await apiClient.get("/about");
+        await apiClient.get("/skills");
       } catch (err) {
         // error aaye to bhi backend wake ho chuka hota hai
         console.log("Backend waking up...");
