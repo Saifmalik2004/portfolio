@@ -25,6 +25,7 @@ import com.saif.portfolio.dto.UserProfileDto;
 import com.saif.portfolio.dto.VerifyEmailRequest;
 import com.saif.portfolio.service.AuthService;
 import com.saif.portfolio.service.UserService;
+import com.saif.portfolio.util.JwtUtil;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -38,6 +39,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final UserService userService;
+        private final JwtUtil jwtUtil;
        @Value("${app.env}")
          private String appEnv;
 
@@ -88,9 +90,9 @@ public class AuthController {
        String ip = extractClientIp(servletRequest);
 
         TokenResponse tokenResponse = authService.login(request, ip);
-
-        // ✅ Refresh token cookie
-        ResponseCookie refreshCookie = createRefreshCookie(tokenResponse.getRefreshToken(), 7 * 24 * 60 * 60);
+        // ✅ Refresh token cookie (use JWT refresh expiration)
+        long maxAge = jwtUtil.getRefreshExpiration() / 1000L; // convert ms -> seconds
+        ResponseCookie refreshCookie = createRefreshCookie(tokenResponse.getRefreshToken(), maxAge);
         response.addHeader("Set-Cookie", refreshCookie.toString());
 
         return ResponseEntity.ok(new ApiResponse<>(200, "Login successful", tokenResponse));
@@ -109,7 +111,8 @@ public class AuthController {
 
 
         TokenResponse tokenResponse = authService.refreshToken(refreshToken);
-        ResponseCookie refreshCookie = createRefreshCookie(tokenResponse.getRefreshToken(), 7 * 24 * 60 * 60);
+        long maxAge = jwtUtil.getRefreshExpiration() / 1000L;
+        ResponseCookie refreshCookie = createRefreshCookie(tokenResponse.getRefreshToken(), maxAge);
         response.addHeader("Set-Cookie", refreshCookie.toString());
 
         return ResponseEntity.ok(new ApiResponse<>(200, "Token refreshed successfully", tokenResponse));
