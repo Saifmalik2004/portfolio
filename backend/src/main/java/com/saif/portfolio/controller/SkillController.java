@@ -52,14 +52,14 @@ public class SkillController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Skill>> createSkill(@RequestBody Skill skill) {
+    public ResponseEntity<ApiResponse<Skill>> createSkill(@Valid @RequestBody Skill skill) {
         Skill saved = skillService.createSkill(skill);
         return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED)
             .body(new ApiResponse<>(201, "Skill created successfully", saved));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Skill>> updateSkill(@PathVariable Long id, @RequestBody Skill skill) {
+    public ResponseEntity<ApiResponse<Skill>> updateSkill(@PathVariable Long id,@Valid @RequestBody Skill skill) {
         Skill updated = skillService.updateSkill(id, skill);
         return ResponseEntity.status(org.springframework.http.HttpStatus.OK)
             .body(new ApiResponse<>(200, "Skill updated successfully", updated));
