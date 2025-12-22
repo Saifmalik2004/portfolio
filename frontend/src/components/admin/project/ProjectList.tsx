@@ -4,6 +4,8 @@ import ProjectCard from "./projectCard";
 
 type ProjectListProps = {
   projects: ProjectResponse[];
+  // If provided, `renderProjects` will be rendered directly (useful for server/client pagination)
+  renderProjects?: ProjectResponse[];
   searchTerm: string;
   filterType: ProjectType | "all";
   filterTech: string | "all";
@@ -30,6 +32,7 @@ const SkeletonProjectCard = () => (
 
 const ProjectList: React.FC<ProjectListProps> = ({
   projects,
+  renderProjects,
   searchTerm,
   filterType,
   filterTech,
@@ -42,8 +45,10 @@ const ProjectList: React.FC<ProjectListProps> = ({
   onDelete,
   onToggleFlag,
 }) => {
-  // Filters projects based on search, type, technology, and live status
-  const filtered = projects.filter((project) => {
+  // If renderProjects supplied, use it directly (already filtered/paged)
+  const filtered = renderProjects
+    ? renderProjects
+    : projects.filter((project) => {
     const matchesSearch =
       project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       project.description.toLowerCase().includes(searchTerm.toLowerCase());

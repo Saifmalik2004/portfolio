@@ -2,16 +2,32 @@ import BlogControls from "@/components/admin/blog/BLogControls";
 import BlogList from "@/components/admin/blog/BlogList";
 import DeleteConfirmModal from "@/components/admin/project/DeleteConfirmModal";
 import blogService from "@/services/blogService";
-import { BlogResponse } from "@/types/blog";
-import { useState, useEffect, useRef } from "react";
+import {  PaginatedBlogResponse } from "@/types/blog";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { RefreshCw } from "lucide-react";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+
+
 
 const BlogManagement = () => {
   const navigate = useNavigate();
-  const hasFetched = useRef(false);
 
-  const [blogs, setBlogs] = useState<BlogResponse[]>([]);
+  const [blogs, setBlogs] = useState<PaginatedBlogResponse>({
+    content: [],
+    totalElements: 0,
+    totalPages: 0,
+    size: 6,
+    page: 0,
+    last:true
+  });
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
   const [isFetching, setIsFetching] = useState(false);
@@ -20,15 +36,17 @@ const BlogManagement = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [blogToDelete, setBlogToDelete] = useState<number | null>(null);
 
-  const categories = ["all", ...new Set(blogs.map((blog) => blog.category))];
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const blogsPerPage = 6;
 
-  const fetchBlogs = async () => {
-    if (hasFetched.current) return;
+  const categories = ["all", ...new Set(blogs.content.map((b) => b.category))];
+
+  const fetchBlogs = async (page = 0, size = 6) => {
     setIsFetching(true);
     try {
-      const data = await blogService.getAllBlogs();
+      const data = await blogService.getAllBlogs(page, size);
       setBlogs(data);
-      hasFetched.current = true;
     } catch (err) {
       console.error(err);
     } finally {
@@ -37,15 +55,13 @@ const BlogManagement = () => {
   };
 
   useEffect(() => {
-    fetchBlogs();
+    fetchBlogs(0, blogsPerPage);
   }, []);
 
   const handleAddBlog = () => navigate("/admin/blogs/new");
 
   const handleRefresh = async () => {
-    hasFetched.current = false;
-    setBlogs([]);
-    await fetchBlogs();
+    await fetchBlogs(currentPage - 1, blogsPerPage);
   };
 
   const confirmDelete = async () => {
@@ -53,7 +69,11 @@ const BlogManagement = () => {
     setIsDeleting(blogToDelete);
     try {
       await blogService.deleteBlog(blogToDelete);
-      setBlogs((prev) => prev.filter((b) => b.id !== blogToDelete));
+      setBlogs((prev) => ({
+        ...prev,
+        content: prev.content.filter((b) => b.id !== blogToDelete),
+        totalElements: prev.totalElements - 1,
+      }));
     } catch (err) {
       console.error(err);
     } finally {
@@ -68,8 +88,23 @@ const BlogManagement = () => {
     setShowConfirmModal(true);
   };
 
+  const filteredBlogs = blogs.content.filter((blog) => {
+    const matchesSearch =
+      blog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      blog.summary.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = filterCategory === "all" || blog.category === filterCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  const totalPages = blogs.totalPages || 1;
+
+  const handlePageChange = async (page: number) => {
+    setCurrentPage(page);
+    await fetchBlogs(page - 1, blogsPerPage);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 ">
+    <div className="min-h-screen bg-gray-50">
       <BlogControls
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
@@ -77,13 +112,13 @@ const BlogManagement = () => {
         setFilterCategory={setFilterCategory}
         categories={categories}
         onAdd={handleAddBlog}
-        onRefresh={handleRefresh}  // ✅ Add refresh prop
+        onRefresh={handleRefresh}
         isSaving={isSaving}
-        isFetching={isFetching}    // Optional: disable controls while fetching
+        isFetching={isFetching}
       />
 
       <BlogList
-        blogs={blogs}
+        blogs={filteredBlogs}
         searchTerm={searchTerm}
         filterCategory={filterCategory}
         isFetching={isFetching}
@@ -91,6 +126,44 @@ const BlogManagement = () => {
         isDeleting={isDeleting}
         onDelete={handleDeleteBlog}
       />
+
+      {!isFetching && totalPages > 1 && (
+        <Pagination className="mt-8 text-black">
+          <PaginationContent className="justify-center">
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
+                aria-disabled={currentPage === 1}
+                className={currentPage === 1 ? "opacity-50 pointer-events-none" : ""}
+              />
+            </PaginationItem>
+
+            {[...Array(totalPages)].map((_, i) => (
+              <PaginationItem key={i + 1}>
+                <PaginationLink
+                  onClick={() => handlePageChange(i + 1)}
+                  isActive={currentPage === i + 1}
+                  className={
+                    currentPage === i + 1
+                      ? "bg-orange-500 text-white hover:bg-orange-600"
+                      : "hover:bg-gray-100"
+                  }
+                >
+                  {i + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
+                aria-disabled={currentPage === totalPages}
+                className={currentPage === totalPages ? "opacity-50 pointer-events-none" : ""}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
 
       <DeleteConfirmModal
         open={showConfirmModal}

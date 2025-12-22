@@ -20,6 +20,7 @@ import {
 import { Skill } from "@/types/skill";
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 // iOS / glass style Project Editor (shadcn + Tailwind)
 // Place this file in your components folder and import where needed.
@@ -49,6 +50,7 @@ export default function ProjectEditorWrapperIOS({
   isSaving,
   availableTechnologies,
 }: Props) {
+  const { toast } = useToast();
   const techNameToId = useMemo(
     () =>
       new Map(availableTechnologies.map((t) => [t.name.toLowerCase(), t.id])),
@@ -175,6 +177,49 @@ export default function ProjectEditorWrapperIOS({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Basic client-side validation
+    if (!formData.title || formData.title.trim() === "") {
+      toast({
+        title: "Validation error",
+        description: "Title is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate / normalize slug
+    const cleanedSlug = slugify(formData.slug || formData.title || "");
+    if (!cleanedSlug) {
+      toast({
+        title: "Validation error",
+        description: "Slug is invalid or empty",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate optional URLs
+    const urlFields: Array<[string, string]> = [
+      ["GitHub URL", formData.githubUrl || ""],
+      ["Live Demo URL", formData.liveDemoUrl || ""],
+    ];
+    for (const [label, val] of urlFields) {
+      if (val && val.trim() !== "") {
+        try {
+          // eslint-disable-next-line no-new
+          new URL(val);
+        } catch (err) {
+          toast({
+            title: "Validation error",
+            description: `${label} is not a valid URL`,
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+    }
+
     setUploading(true);
     try {
       // First, delete removed images from Cloudinary
@@ -194,17 +239,26 @@ export default function ProjectEditorWrapperIOS({
         );
       }
 
-      const cleanedSlug = slugify(formData.slug);
       const updatedImages = formData.images
         .filter((img) => !deletedPublicIds.includes(img.publicId))
         .concat(newUploaded);
+
       onSave({ ...formData, slug: cleanedSlug, images: updatedImages });
       pendingImages.forEach(({ preview }) => URL.revokeObjectURL(preview));
       setDeletedPublicIds([]);
       setPendingImages([]);
+
+      toast({
+        title: "Project submitted",
+        description: "Project data has been submitted",
+      });
     } catch (err) {
       console.error(err);
-      alert("Image processing failed");
+      toast({
+        title: "Image processing failed",
+        description: "An error occurred while uploading or deleting images",
+        variant: "destructive",
+      });
     } finally {
       setUploading(false);
     }

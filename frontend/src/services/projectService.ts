@@ -1,7 +1,8 @@
 import { apiClient } from "../lib/apiClient";
 
 import { ApiResponse } from "../types/api";
-import { ProjectRequest, ProjectResponse, SimpleProject } from "../types/project";
+import { PaginatedProjectResponse, ProjectRequest, ProjectResponse } from "../types/project";
+
 
 class ProjectService {
   async getAllProjects(): Promise<ProjectResponse[]> {
@@ -9,8 +10,10 @@ class ProjectService {
     return response.data.data;
   }
 
-  async getAllSimpleProjects(): Promise<SimpleProject[]> {
-    const response = await apiClient.get<ApiResponse<SimpleProject[]>>("/projects/simple");
+ async getPaginatedSimpleProjects(page = 0, size = 6): Promise<PaginatedProjectResponse> {
+    const response = await apiClient.get<ApiResponse<PaginatedProjectResponse>>(
+      `/projects/simple?page=${page}&size=${size}`
+    );
     return response.data.data;
   }
 

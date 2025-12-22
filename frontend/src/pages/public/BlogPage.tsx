@@ -1,41 +1,20 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import blogService from "../../services/blogService";
-import { BlogResponse } from "../../types/blog";
-import BlogCard from "../../components/blog/BlogCard";
+import blogService from "@/services/blogService";
+import { BlogResponse ,PaginatedBlogResponse} from "@/types/blog";
+import BlogCard from "@/components/blog/BlogCard";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 
-const BlogPage = () => {
-  const [blogs, setBlogs] = useState<BlogResponse[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const blogsPerPage = 9;
 
-  useEffect(() => {
-    const fetchBlogs = async () => {
-      try {
-        const data = await blogService.getAllBlogs();
-        setBlogs(data);
-        setError(null);
-      } catch (err) {
-        console.error("Error fetching blogs:", err);
-        setError("Failed to load blog posts");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBlogs();
-  }, []);
-
-  // Pagination logic
-  const indexOfLastBlog = currentPage * blogsPerPage;
-  const indexOfFirstBlog = indexOfLastBlog - blogsPerPage;
-  const currentBlogs = blogs.slice(indexOfFirstBlog, indexOfLastBlog);
-  const totalPages = Math.ceil(blogs.length / blogsPerPage);
-
-  const LoadingSkeleton = () => (
+const LoadingSkeleton = () => (
   <div className="animate-pulse">
     <div className="bg-gray-200 h-48 rounded-t-2xl" />
     <div className="p-6 border border-gray-100 rounded-b-2xl">
@@ -47,6 +26,34 @@ const BlogPage = () => {
   </div>
 );
 
+
+
+const BlogPage = () => {
+  const [blogs, setBlogs] = useState<BlogResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(0); // 0-based index
+  const [totalPages, setTotalPages] = useState(0);
+  const blogsPerPage = 6; // must match backend
+
+  useEffect(() => {
+    const fetchBlogs = async () => {
+      try {
+        setLoading(true);
+        const data: PaginatedBlogResponse = await blogService.getAllBlogs(currentPage, blogsPerPage);
+        setBlogs(data.content);
+        setTotalPages(data.totalPages);
+        setError(null);
+      } catch (err) {
+        console.error("Error fetching blogs:", err);
+        setError("Failed to load blog posts");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBlogs();
+  }, [currentPage]);
 
   return (
     <motion.div
@@ -63,7 +70,7 @@ const BlogPage = () => {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto px-4 sm:px-0 text-center leading-relaxed">
+          <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto px-4 sm:px-0 leading-relaxed">
             Thoughts, tutorials, and insights about web development, design, and technology.
             Sharing knowledge and experiences from my journey as a developer.
           </p>
@@ -88,36 +95,49 @@ const BlogPage = () => {
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {currentBlogs.map((post, index) => (
+            {blogs.map((post, index) => (
               <BlogCard key={post.id} post={post} index={index} />
             ))}
           </div>
         )}
 
-        {/* Pagination */}
+        {/* ✅ Shadcn Pagination */}
         {!loading && !error && totalPages > 1 && (
-          <motion.div
-            initial={{ y: 50, opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
-            viewport={{ once: true }}
-            className="flex justify-center mt-16"
-          >
-            <div className="flex space-x-2">
+          <Pagination className="mt-16 text-black">
+            <PaginationContent className="justify-center">
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 0))}
+                  aria-disabled={currentPage === 0}
+                  className={currentPage === 0 ? "opacity-50 pointer-events-none" : ""}
+                />
+              </PaginationItem>
+
               {[...Array(totalPages)].map((_, index) => (
-                <button
-                  key={index + 1}
-                  onClick={() => setCurrentPage(index + 1)}
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                    currentPage === index + 1
-                      ? "bg-orange-500 text-white"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  {index + 1}
-                </button>
+                <PaginationItem key={index}>
+                  <PaginationLink
+                    onClick={() => setCurrentPage(index)}
+                    isActive={currentPage === index}
+                    className={
+                      currentPage === index
+                        ? "bg-orange-500 text-white hover:bg-orange-600"
+                        : "hover:bg-gray-100"
+                    }
+                  >
+                    {index + 1}
+                  </PaginationLink>
+                </PaginationItem>
               ))}
-            </div>
-          </motion.div>
+
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1))}
+                  aria-disabled={currentPage === totalPages - 1}
+                  className={currentPage === totalPages - 1 ? "opacity-50 pointer-events-none" : ""}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         )}
       </div>
     </motion.div>

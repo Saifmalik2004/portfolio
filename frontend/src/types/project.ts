@@ -1,3 +1,5 @@
+import { PaginatedResponse } from "./paginatedReponse";
+
 // ✅ Enum (already defined)
 export enum ProjectType {
   Freelance = "Freelance",
@@ -60,3 +62,5 @@ export interface SimpleProject {
   technologies: string[]; 
   imageUrl: string;
 }
+
+export type PaginatedProjectResponse = PaginatedResponse<SimpleProject>;

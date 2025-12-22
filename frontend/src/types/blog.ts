@@ -1,3 +1,4 @@
+import { PaginatedResponse } from "./paginatedReponse";
 import { ImageUploadResponse } from "./project";
 
 // Blog response from API
@@ -31,3 +32,5 @@ export interface BlogRequest {
 export interface BlogFilters {
   category?: string;
 }
+
+export type PaginatedBlogResponse = PaginatedResponse<BlogResponse>;

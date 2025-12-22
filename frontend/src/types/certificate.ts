@@ -1,3 +1,4 @@
+import { PaginatedResponse } from "./paginatedReponse";
 
 
 export interface Certificate {
@@ -11,3 +12,5 @@ export interface Certificate {
 }
 
 
+
+export type PaginatedBCertificateResponse = PaginatedResponse<Certificate>;
