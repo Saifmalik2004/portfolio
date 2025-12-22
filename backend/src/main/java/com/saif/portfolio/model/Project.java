@@ -1,8 +1,9 @@
 package com.saif.portfolio.model;
 
-
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -12,6 +13,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
@@ -22,12 +24,20 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "projects")
+@Table(
+    name = "projects",
+    indexes = {
+        @Index(name = "idx_projects_published_created_at", columnList = "published, created_at"),
+        @Index(name = "idx_projects_featured_published", columnList = "featured, published"),
+        @Index(name = "idx_projects_type", columnList = "type")
+    }
+)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Project {
-     @Id
+
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
@@ -56,7 +66,7 @@ public class Project {
     private boolean featured = false;
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ProjectKeyFeature> keyFeatures;
+    private Set<ProjectKeyFeature> keyFeatures = new HashSet<>();
 
     @ManyToMany
     @JoinTable(

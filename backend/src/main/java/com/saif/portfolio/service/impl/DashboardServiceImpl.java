@@ -6,6 +6,7 @@ import java.util.Map;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.saif.portfolio.repository.BlogRepository;
 import com.saif.portfolio.repository.CertificateRepository;
@@ -28,43 +29,51 @@ public class DashboardServiceImpl implements DashboardService {
     private final CertificateRepository certificateRepository;
     private final UserRepository userRepository;
 
+    // -------------------------------------------------
+    // DASHBOARD STATS
+    // -------------------------------------------------
     @Override
     @Cacheable("dashboardStats")
+    @Transactional(readOnly = true)
     public Map<String, Long> getDashboardStats() {
-        Map<String, Long> stats = new HashMap<>();
 
-        // Projects
-        stats.put("totalProjects", projectRepository.countProjects());
+        // initial capacity to avoid resizing
+        Map<String, Long> stats = new HashMap<>(16);
+
+        // ---------------- Projects ----------------
+        stats.put("totalProjects", projectRepository.count());
         stats.put("featuredProjects", projectRepository.countFeaturedProjects());
 
-        // Skills
-        skillRepository.countSkillsByCategory().forEach(obj -> {
-            String category = (String) obj[0];
-            Long count = (Long) obj[1];
+        // ---------------- Skills (category wise) ----------------
+        skillRepository.countSkillsByCategory().forEach(row -> {
+            String category = (String) row[0];
+            Long count = ((Number) row[1]).longValue();
             stats.put(category.toLowerCase() + "Skills", count);
         });
 
-        // Users
-        stats.put("verifiedUsers", userRepository.countVerifyUser());
+        // ---------------- Users ----------------
         stats.put("totalUsers", userRepository.countAllRegisterUser());
+        stats.put("verifiedUsers", userRepository.countVerifyUser());
 
-        // Contacts
+        // ---------------- Contacts ----------------
         stats.put("totalContacts", contactRepository.countContact());
         stats.put("unreadMessages", contactRepository.countUnreadMessages());
 
-        // Certificates
-        stats.put("totalCertificates", certificateRepository.countCertificate());
+        // ---------------- Certificates ----------------
+        stats.put("totalCertificates", certificateRepository.count());
 
-        // Blogs
-        stats.put("totalBlogs", blogRepository.countBlogs());
+        // ---------------- Blogs ----------------
+        stats.put("totalBlogs", blogRepository.count());
 
         return stats;
     }
 
-    // Called by AOP to evict cache
+    // -------------------------------------------------
+    // CACHE CLEAR
+    // -------------------------------------------------
     @Override
     @CacheEvict(value = "dashboardStats", allEntries = true)
     public void clearDashboardCache() {
-        // intentionally empty, AOP triggers this
+        // cache eviction only
     }
 }

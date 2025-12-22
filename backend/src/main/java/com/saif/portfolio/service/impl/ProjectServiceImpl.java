@@ -5,11 +5,16 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.saif.portfolio.dto.ImageUploadResponse;
 import com.saif.portfolio.dto.ProjectRequest;
@@ -26,7 +31,6 @@ import com.saif.portfolio.repository.ProjectRepository;
 import com.saif.portfolio.repository.SkillRepository;
 import com.saif.portfolio.service.ProjectService;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -36,295 +40,364 @@ public class ProjectServiceImpl implements ProjectService {
     private final ProjectRepository projectRepository;
     private final SkillRepository skillRepository;
 
-    // ----------------- READ METHODS WITH CACHE -----------------
-    @Cacheable(value = "allProjects")
+    // -------------------------------------------------
+    // READ
+    // -------------------------------------------------
     @Override
+    @Cacheable("allProjects")
+    @Transactional(readOnly = true)
     public List<ProjectResponse> getAllProjects() {
-        return projectRepository.findAll().stream().map(this::toProjectResponse).toList();
-    }
-    
-    @Override
-@Cacheable(value = "allSimpleProjects")
-public List<SimpleProjectResponse> getAllSimpleProjectResponses() {
-    List<Object[]> results = projectRepository.findAllSimpleProjectsNative();
-
-    return results.stream().map(row -> new SimpleProjectResponse(
-            ((Number) row[0]).intValue(),    // id
-            (String) row[1],                 // title
-            (String) row[2],                 // slug
-            (String) row[3],                 // description
-            (String) row[4],                 // githubUrl
-            (String) row[5],                 // liveDemoUrl
-            (Boolean) row[6],                // live
-            (Boolean) row[7],                // published
-            (Boolean) row[8],                // featured
-            (String) row[9],                 // type
-            (String) row[10],                // imageUrl
-            ((String) row[11]).isBlank() ? List.of() :
-                List.of(((String) row[11]).split(",")) // ✅ Convert comma-separated to List<String>
-    )).toList();
-}
-
-
-    @Cacheable(value = "featuredProjects")
-    @Override
-    public List<ProjectResponse> getFeaturedProjects() {
-        return projectRepository.findByFeaturedTrue()
+        return projectRepository.findAll()
                 .stream()
-                .map(this::toProjectResponse)
+                .map(this::toResponse)
                 .toList();
     }
 
     @Override
+    @Cacheable(value = "simpleProjects", key = "#page + '-' + #size", sync = true)
+    @Transactional(readOnly = true)
+    public Page<SimpleProjectResponse> getAllSimpleProjectResponses(int page, int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        return projectRepository.findAllSimpleProjectsNative(pageable)
+                .map(this::mapSimpleProject);
+    }
+
+    @Override
+    @Cacheable("featuredProjects")
+    @Transactional(readOnly = true)
+    public List<ProjectResponse> getFeaturedProjects() {
+        return projectRepository.findByFeaturedTrue()
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public ProjectResponse getProjectById(int id) {
-        Project project = projectRepository.findById(id)
-                .orElseThrow(() -> new com.saif.portfolio.exception.ResourceNotFoundException("Project not found with id: " + id));
-        return toProjectResponse(project);
+        return toResponse(findProject(id));
     }
 
     @Override
-    @Cacheable(value = "projectBySlug", key = "#slug")
+    @Cacheable(value = "projectBySlug", key = "#slug.toLowerCase()")
+    @Transactional(readOnly = true)
     public ProjectResponse getProjectBySlug(String slug) {
-        Project project = projectRepository.findBySlug(slug)
-                .orElseThrow(() -> new com.saif.portfolio.exception.ResourceNotFoundException("Project not found with slug: " + slug));
-        return toProjectResponse(project);
+        return toResponse(
+                projectRepository.findBySlugIgnoreCase(slug)
+                        .orElseThrow(()
+                                -> new ResourceNotFoundException("Project not found with slug: " + slug))
+        );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ProjectResponse> getProjectsByType(String type) {
         ProjectType projectType = ProjectType.valueOf(type.toUpperCase());
-        return projectRepository.findByType(projectType).stream().map(this::toProjectResponse).toList();
+        return projectRepository.findByType(projectType)
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 
-    // ----------------- CREATE / UPDATE METHODS -----------------
-    @CacheEvict(value = {"allProjects", "projectBySlug", "featuredProjects","allSimpleProjects"}, allEntries = true)
-    @Transactional
+    // -------------------------------------------------
+    // CREATE
+    // -------------------------------------------------
     @Override
+    @Transactional
+    @CacheEvict(allEntries = true, value = {
+        "allProjects", "projectBySlug", "featuredProjects", "simpleProjects"
+    })
     public ProjectResponse createProject(ProjectRequest request) {
-        // Create and set basic project fields
+
+        String slug = request.getSlug().toLowerCase();
+
+        if (projectRepository.existsBySlugIgnoreCase(slug)) {
+            throw new IllegalArgumentException("Project with slug already exists: " + slug);
+        }
+
         Project project = new Project();
-        project.setTitle(request.getTitle());
-        project.setSlug(request.getSlug());
-        project.setDescription(request.getDescription());
-        project.setGithubUrl(request.getGithubUrl());
-        project.setLiveDemoUrl(request.getLiveDemoUrl());
-        project.setLive(request.getLive());
-        project.setPublished(request.getPublished());
-        project.setFeatured(request.getFeatured());
-        project.setType(request.getType());
+        applyBasicFields(project, request, slug);
         project.setCreatedAt(Instant.now());
 
-        // Save project first to get its ID for composite keys
-        Project saved = projectRepository.save(project);
+        attachKeyFeatures(project, request);
+        attachImages(project, request);
+        attachTechnologies(project, request);
 
-        // Handle key features with composite key
-        if (request.getKeyFeatures() != null) {
-            List<ProjectKeyFeature> features = new ArrayList<>();
-            for (String feature : request.getKeyFeatures()) {
-                ProjectKeyFeatureId featureId = new ProjectKeyFeatureId(saved.getId(), feature);
-                ProjectKeyFeature pkf = new ProjectKeyFeature();
-                pkf.setId(featureId);
-                pkf.setProject(saved);
-                features.add(pkf);
-            }
-            saved.setKeyFeatures(features);
-        }
-
-        // Handle images with composite key
-        if (request.getImages() != null) {
-            List<ProjectImage> images = new ArrayList<>();
-            for (ImageUploadResponse image : request.getImages()) {
-                ProjectImage entity = new ProjectImage();
-                entity.setPublicId(image.getPublicId());
-                entity.setProject(saved);
-                entity.setUrl(image.getUrl());
-                images.add(entity);
-            }
-            saved.setImages(images);
-        }
-
-        // Handle technologies
-        if (request.getTechnologies() != null && !request.getTechnologies().isEmpty()) {
-            List<Skill> skills = skillRepository.findAllById(request.getTechnologies());
-            if (skills.isEmpty()) {
-                throw new ResourceNotFoundException("No valid technologies found with the provided IDs");
-            }
-            if (skills.size() != request.getTechnologies().size()) {
-                List<Long> foundIds = skills.stream().map(Skill::getId).toList();
-                List<Long> invalidIds = request.getTechnologies().stream()
-                        .filter(id -> !foundIds.contains(id))
-                        .toList();
-                throw new ResourceNotFoundException("Some technology IDs were not found: " + invalidIds);
-            }
-            saved.setTechnologies(skills);
-        }
-
-        // Save again with all relationships
-        saved = projectRepository.save(saved);
-        return toProjectResponse(saved);
+        return toResponse(projectRepository.save(project));
     }
 
-    @Transactional
-    @CacheEvict(value = {"allProjects", "projectBySlug", "featuredProjects","allSimpleProjects"}, allEntries = true)
+    // -------------------------------------------------
+    // UPDATE
+    // -------------------------------------------------
     @Override
+    @Transactional
+    @CacheEvict(allEntries = true, value = {
+        "allProjects", "projectBySlug", "featuredProjects", "simpleProjects"
+    })
     public ProjectResponse updateProject(Integer id, ProjectRequest request) {
-        Project project = projectRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Project not found with id: " + id));
 
-        // Update basic fields
-        project.setTitle(request.getTitle());
-        project.setSlug(request.getSlug());
-        project.setDescription(request.getDescription());
-        project.setGithubUrl(request.getGithubUrl());
-        project.setLiveDemoUrl(request.getLiveDemoUrl());
-        project.setLive(request.getLive());
-        project.setPublished(request.getPublished());
-        project.setFeatured(request.getFeatured());
-        project.setType(request.getType());
+        Project project = findProject(id);
+        String slug = request.getSlug().toLowerCase();
 
-        // ✅ Update Key Features
-        if (request.getKeyFeatures() != null) {
-            List<ProjectKeyFeature> existingFeatures = new ArrayList<>(project.getKeyFeatures() != null ? project.getKeyFeatures() : List.of());
-            Set<String> newFeatureSet = new HashSet<>(request.getKeyFeatures());
-
-            // 1. Remove key features not present in the new list
-            List<ProjectKeyFeature> featuresToRemove = existingFeatures.stream()
-                    .filter(f -> !newFeatureSet.contains(f.getId().getKeyFeature()))
-                    .toList();
-            featuresToRemove.forEach(f -> {
-                project.getKeyFeatures().remove(f);
-            });
-
-            // 2. Add only the new ones (that are not already present)
-            Set<String> existingFeatureNames = project.getKeyFeatures().stream()
-                    .map(f -> f.getId().getKeyFeature()).collect(Collectors.toSet());
-
-            request.getKeyFeatures().stream()
-                    .filter(f -> !existingFeatureNames.contains(f))
-                    .forEach(f -> {
-                        ProjectKeyFeatureId newId = new ProjectKeyFeatureId(project.getId(), f);
-                        ProjectKeyFeature newFeature = new ProjectKeyFeature(newId, project);
-                        project.getKeyFeatures().add(newFeature);
-                    });
+        if (!project.getSlug().equals(slug)
+                && projectRepository.existsBySlugIgnoreCase(slug)) {
+            throw new IllegalArgumentException("Project with slug already exists: " + slug);
         }
 
-        // ✅ Update Images
-        if (request.getImages() != null) {
-            if (project.getImages() == null) {
-                project.setImages(new ArrayList<>());
-            }
+        applyBasicFields(project, request, slug);
+        project.setUpdatedAt(Instant.now());
 
-            // 1️⃣ Delete removed images
-            List<ProjectImage> imagesToRemove = project.getImages().stream()
-                    .filter(dbImg -> request.getImages().stream()
-                    .noneMatch(reqImg -> reqImg.getPublicId().equals(dbImg.getPublicId())))
-                    .toList();
+        syncKeyFeatures(project, request);
+        syncImages(project, request);
+        attachTechnologies(project, request);
 
-            imagesToRemove.forEach(img -> { // delete from Cloudinary
-                project.getImages().remove(img);             // remove from DB
-            });
-
-            // 2️⃣ Add new images
-            Set<String> existingPublicIds = project.getImages().stream()
-                    .map(ProjectImage::getPublicId)
-                    .collect(Collectors.toSet());
-
-            request.getImages().stream()
-                    .filter(reqImg -> !existingPublicIds.contains(reqImg.getPublicId()))
-                    .forEach(reqImg -> {
-                        ProjectImage newImg = new ProjectImage();
-                        newImg.setPublicId(reqImg.getPublicId());
-                        newImg.setUrl(reqImg.getUrl());
-                        newImg.setProject(project);
-                        project.getImages().add(newImg);
-                    });
-        }
-
-        // ✅ Update Technologies
-        if (request.getTechnologies() != null && !request.getTechnologies().isEmpty()) {
-            List<Skill> skills = skillRepository.findAllById(request.getTechnologies());
-            if (skills.isEmpty()) {
-                throw new ResourceNotFoundException("No valid technologies found with the provided IDs");
-            }
-            if (skills.size() != request.getTechnologies().size()) {
-                List<Long> foundIds = skills.stream().map(Skill::getId).toList();
-                List<Long> invalidIds = request.getTechnologies().stream()
-                        .filter(techId -> !foundIds.contains(techId))
-                        .toList();
-                throw new ResourceNotFoundException("Some technology IDs were not found: " + invalidIds);
-            }
-            project.setTechnologies(skills);
-        }
-
-        Project updated = projectRepository.save(project);
-        return toProjectResponse(updated);
+        return toResponse(projectRepository.save(project));
     }
 
-    @Transactional
-    @CacheEvict(value = {"allProjects", "projectBySlug", "featuredProjects","allSimpleProjects"}, allEntries = true)
+    // -------------------------------------------------
+    // DELETE AND TOGGLES
+    // -------------------------------------------------
     @Override
+    @Transactional
+    @CacheEvict(
+            allEntries = true,
+            value = {
+                "allProjects",
+                "projectBySlug",
+                "featuredProjects",
+                "simpleProjects"
+            }
+    )
     public ProjectResponse deleteProject(Integer id) {
+
         Project project = projectRepository.findById(id)
-                .orElseThrow(() -> new com.saif.portfolio.exception.ResourceNotFoundException("Project not found with id: " + id));
-        projectRepository.deleteById(id);
-        return toProjectResponse(project);
+                .orElseThrow(()
+                        -> new ResourceNotFoundException("Project not found with id: " + id));
+
+        projectRepository.delete(project);
+
+        
+        return toResponse(project);
     }
 
-    @Transactional
-    @CacheEvict(value = {"allProjects", "projectBySlug", "featuredProjects"}, allEntries = true)
     @Override
     public ProjectResponse toggleLive(Integer id) {
-        Project project = projectRepository.findById(id)
-                .orElseThrow(() -> new com.saif.portfolio.exception.ResourceNotFoundException("Project not found with id: " + id));
-        project.setLive(!project.isLive());
-        Project updated = projectRepository.save(project);
-        return toProjectResponse(updated);
+        return toggle(id, p -> p.setLive(!p.isLive()));
     }
 
-    @Transactional
-    @CacheEvict(value = {"allProjects", "projectBySlug", "featuredProjects","allSimpleProjects"}, allEntries = true)
     @Override
     public ProjectResponse togglePublished(Integer id) {
-        Project project = projectRepository.findById(id)
-                .orElseThrow(() -> new com.saif.portfolio.exception.ResourceNotFoundException("Project not found with id: " + id));
-        project.setPublished(!project.isPublished());
-        project.setUpdatedAt(Instant.now());
-        Project updated = projectRepository.save(project);
-        return toProjectResponse(updated);
+        return toggle(id, p -> p.setPublished(!p.isPublished()));
     }
 
-    @Transactional
-    @CacheEvict(value = {"allProjects", "projectBySlug", "featuredProjects","allSimpleProjects"}, allEntries = true)
     @Override
     public ProjectResponse toggleFeatured(Integer id) {
-        Project project = projectRepository.findById(id)
-                .orElseThrow(() -> new com.saif.portfolio.exception.ResourceNotFoundException("Project not found with id: " + id));
-        project.setFeatured(!project.isFeatured());
-        Project updated = projectRepository.save(project);
-        return toProjectResponse(updated);
+        return toggle(id, p -> p.setFeatured(!p.isFeatured()));
     }
 
-    private ProjectResponse toProjectResponse(Project project) {
+    // -------------------------------------------------
+    // INTERNAL HELPERS
+    // -------------------------------------------------
+    private Project findProject(Integer id) {
+        return projectRepository.findById(id)
+                .orElseThrow(()
+                        -> new ResourceNotFoundException("Project not found with id: " + id));
+    }
+
+    private ProjectResponse toggle(Integer id, Consumer<Project> action) {
+        Project project = findProject(id);
+        action.accept(project);
+        project.setUpdatedAt(Instant.now());
+        return toResponse(projectRepository.save(project));
+    }
+
+    private SimpleProjectResponse mapSimpleProject(Object[] r) {
+
+        List<String> techs = r[11] == null || ((String) r[11]).isBlank()
+                ? List.of()
+                : List.of(((String) r[11]).split(","))
+                        .stream()
+                        .map(String::trim)
+                        .toList();
+
+        return new SimpleProjectResponse(
+                ((Number) r[0]).intValue(),
+                (String) r[1],
+                (String) r[2],
+                (String) r[3],
+                (String) r[4],
+                (String) r[5],
+                (Boolean) r[6],
+                (Boolean) r[7],
+                (Boolean) r[8],
+                (String) r[9],
+                (String) r[10],
+                techs
+        );
+    }
+
+    private ProjectResponse toResponse(Project p) {
         return ProjectResponse.builder()
-                .id(project.getId())
-                .title(project.getTitle())
-                .slug(project.getSlug())
-                .description(project.getDescription())
-                .githubUrl(project.getGithubUrl())
-                .liveDemoUrl(project.getLiveDemoUrl())
-                .live(project.isLive())
-                .published(project.isPublished())
-                .featured(project.isFeatured())
-                .type(project.getType() != null ? project.getType().name() : null)
-                .createdAt(project.getCreatedAt())
-                .updatedAt(project.getUpdatedAt())
-                .keyFeatures(project.getKeyFeatures() != null ? project.getKeyFeatures().stream().map(f -> f.getId().getKeyFeature()).toList() : null)
-                .images(project.getImages() != null
-                        ? project.getImages().stream()
-                                .map(img -> new ImageUploadResponse(img.getPublicId(), img.getUrl()))
+                .id(p.getId())
+                .title(p.getTitle())
+                .slug(p.getSlug())
+                .description(p.getDescription())
+                .githubUrl(p.getGithubUrl())
+                .liveDemoUrl(p.getLiveDemoUrl())
+                .live(p.isLive())
+                .published(p.isPublished())
+                .featured(p.isFeatured())
+                .type(p.getType() != null ? p.getType().name() : null)
+                .createdAt(p.getCreatedAt())
+                .updatedAt(p.getUpdatedAt())
+                .keyFeatures(
+                        p.getKeyFeatures() == null ? List.of()
+                        : p.getKeyFeatures().stream()
+                                .map(f -> f.getId().getKeyFeature())
                                 .toList()
-                        : null)
-                .technologies(project.getTechnologies() != null ? project.getTechnologies().stream().map(Skill::getName).toList() : null)
+                )
+                .images(
+                        p.getImages() == null ? List.of()
+                        : p.getImages().stream()
+                                .map(i -> new ImageUploadResponse(i.getPublicId(), i.getUrl()))
+                                .toList()
+                )
+                .technologies(
+                        p.getTechnologies() == null ? List.of()
+                        : p.getTechnologies().stream()
+                                .map(Skill::getName)
+                                .toList()
+                )
                 .build();
+    }
+
+    private void applyBasicFields(Project p, ProjectRequest r, String slug) {
+        p.setTitle(r.getTitle());
+        p.setSlug(slug);
+        p.setDescription(r.getDescription());
+        p.setGithubUrl(r.getGithubUrl());
+        p.setLiveDemoUrl(r.getLiveDemoUrl());
+        p.setLive(r.getLive());
+        p.setPublished(r.getPublished());
+        p.setFeatured(r.getFeatured());
+        p.setType(r.getType());
+    }
+
+    // -------------------------------------------------
+    // RELATION HELPERS
+    // -------------------------------------------------
+    private void attachKeyFeatures(Project project, ProjectRequest request) {
+        if (request.getKeyFeatures() == null || request.getKeyFeatures().isEmpty()) {
+            return;
+        }
+
+        Set<ProjectKeyFeature> features = request.getKeyFeatures().stream()
+                .map(f -> new ProjectKeyFeature(
+                new ProjectKeyFeatureId(null, f),
+                project
+        ))
+                .collect(Collectors.toSet());
+
+        project.setKeyFeatures(features);
+    }
+
+    private void syncKeyFeatures(Project project, ProjectRequest request) {
+        if (request.getKeyFeatures() == null) {
+            return;
+        }
+
+        if (project.getKeyFeatures() == null) {
+            project.setKeyFeatures(new HashSet<>());
+        }
+
+        Set<String> incoming = new HashSet<>(request.getKeyFeatures());
+
+        project.getKeyFeatures()
+                .removeIf(existing
+                        -> !incoming.contains(existing.getId().getKeyFeature()));
+
+        Set<String> existingNames = project.getKeyFeatures()
+                .stream()
+                .map(f -> f.getId().getKeyFeature())
+                .collect(Collectors.toSet());
+
+        incoming.stream()
+                .filter(name -> !existingNames.contains(name))
+                .forEach(name
+                        -> project.getKeyFeatures().add(
+                        new ProjectKeyFeature(
+                                new ProjectKeyFeatureId(project.getId(), name),
+                                project
+                        )
+                )
+                );
+    }
+
+    private void attachImages(Project project, ProjectRequest request) {
+        if (request.getImages() == null || request.getImages().isEmpty()) {
+            return;
+        }
+
+        List<ProjectImage> images = request.getImages().stream()
+                .map(img -> {
+                    ProjectImage pi = new ProjectImage();
+                    pi.setPublicId(img.getPublicId());
+                    pi.setUrl(img.getUrl());
+                    pi.setProject(project);
+                    return pi;
+                })
+                .toList();
+
+        project.setImages(images);
+    }
+
+    private void syncImages(Project project, ProjectRequest request) {
+        if (request.getImages() == null) {
+            return;
+        }
+
+        if (project.getImages() == null) {
+            project.setImages(new ArrayList<>());
+        }
+
+        Set<String> incomingIds = request.getImages().stream()
+                .map(ImageUploadResponse::getPublicId)
+                .collect(Collectors.toSet());
+
+        project.getImages()
+                .removeIf(img -> !incomingIds.contains(img.getPublicId()));
+
+        Set<String> existingIds = project.getImages().stream()
+                .map(ProjectImage::getPublicId)
+                .collect(Collectors.toSet());
+
+        request.getImages().stream()
+                .filter(img -> !existingIds.contains(img.getPublicId()))
+                .forEach(img -> {
+                    ProjectImage pi = new ProjectImage();
+                    pi.setPublicId(img.getPublicId());
+                    pi.setUrl(img.getUrl());
+                    pi.setProject(project);
+                    project.getImages().add(pi);
+                });
+    }
+
+    private void attachTechnologies(Project project, ProjectRequest request) {
+        if (request.getTechnologies() == null || request.getTechnologies().isEmpty()) {
+            return;
+        }
+
+        List<Skill> skills = skillRepository.findAllById(request.getTechnologies());
+
+        if (skills.size() != request.getTechnologies().size()) {
+            List<Long> foundIds = skills.stream().map(Skill::getId).toList();
+            List<Long> invalid = request.getTechnologies().stream()
+                    .filter(id -> !foundIds.contains(id))
+                    .toList();
+            throw new ResourceNotFoundException("Invalid technology IDs: " + invalid);
+        }
+
+        project.setTechnologies(skills);
     }
 }

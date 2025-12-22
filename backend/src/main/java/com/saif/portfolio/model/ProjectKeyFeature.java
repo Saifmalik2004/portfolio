@@ -1,12 +1,6 @@
 package com.saif.portfolio.model;
 
-import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MapsId;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,6 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProjectKeyFeature {
+
     @EmbeddedId
     private ProjectKeyFeatureId id;
 
@@ -25,4 +20,17 @@ public class ProjectKeyFeature {
     @JoinColumn(name = "project_id")
     private Project project;
 
+    // ✅ Add equals() and hashCode() — delegate to embedded id
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ProjectKeyFeature)) return false;
+        ProjectKeyFeature that = (ProjectKeyFeature) o;
+        return this.id != null && this.id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
+    }
 }

@@ -1,7 +1,5 @@
 package com.saif.portfolio.service;
 
-import java.util.List;
-
 import org.springframework.data.domain.Page;
 
 import com.saif.portfolio.dto.BlogListResponse;
