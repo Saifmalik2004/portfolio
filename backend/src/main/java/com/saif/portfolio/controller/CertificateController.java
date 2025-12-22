@@ -1,7 +1,7 @@
 package com.saif.portfolio.controller;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,12 +10,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.saif.portfolio.dto.ApiResponse;
 import com.saif.portfolio.dto.CertificateRequest;
+import com.saif.portfolio.dto.PagedResponse;
 import com.saif.portfolio.model.Certificate;
-import com.saif.portfolio.service.impl.CertificateServiceImpl;
+import com.saif.portfolio.service.CertificateService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,46 +27,100 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CertificateController {
 
-    private final CertificateServiceImpl certificateService;
+    private final CertificateService certificateService;
 
-    // ----------------- READ -----------------
 
+    // -------------------------------------------------
+    // GET ALL (PAGED)
+    // -------------------------------------------------
     @GetMapping
-    public ResponseEntity<ApiResponse<List<Certificate>>> getAllCertificates() {
-        List<Certificate> responses = certificateService.getAllCertificates();
-        return ResponseEntity.ok(new ApiResponse<>(200, "Certificates fetched successfully", responses));
+    public ResponseEntity<ApiResponse<PagedResponse<Certificate>>> getAllCertificatesPaged(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "6") int size) {
+
+        Page<Certificate> result =
+                certificateService.getAllCertificates(page, size);
+
+        PagedResponse<Certificate> response = new PagedResponse<>(
+                result.getContent(),
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements(),
+                result.getTotalPages(),
+                result.isLast()
+        );
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(HttpStatus.OK.value(),
+                        "Certificates fetched successfully",
+                        response)
+        );
     }
 
+    // -------------------------------------------------
+    // GET BY ID
+    // -------------------------------------------------
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Certificate>> getCertificateById(@PathVariable Integer id) {
-        Certificate response = certificateService.getCertificateById(id);
-        return ResponseEntity.ok(new ApiResponse<>(200, "Certificate fetched successfully", response));
+    public ResponseEntity<ApiResponse<Certificate>> getCertificateById(
+            @PathVariable Integer id) {
+
+        Certificate certificate = certificateService.getCertificateById(id);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(HttpStatus.OK.value(),
+                        "Certificate fetched successfully",
+                        certificate)
+        );
     }
 
-    // ----------------- CREATE -----------------
-
+    // -------------------------------------------------
+    // CREATE
+    // -------------------------------------------------
     @PostMapping
     public ResponseEntity<ApiResponse<Certificate>> createCertificate(
             @Valid @RequestBody CertificateRequest request) {
-        Certificate response = certificateService.createCertificate(request);
-        return ResponseEntity.status(201).body(new ApiResponse<>(201, "Certificate created successfully", response));
+
+        Certificate certificate =
+                certificateService.createCertificate(request);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(HttpStatus.CREATED.value(),
+                        "Certificate created successfully",
+                        certificate));
     }
 
-    // ----------------- UPDATE -----------------
-
+    // -------------------------------------------------
+    // UPDATE
+    // -------------------------------------------------
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<Certificate>> updateCertificate(
             @PathVariable Integer id,
             @Valid @RequestBody CertificateRequest request) {
-        Certificate response = certificateService.updateCertificate(id, request);
-        return ResponseEntity.ok(new ApiResponse<>(200, "Certificate updated successfully", response));
+
+        Certificate certificate =
+                certificateService.updateCertificate(id, request);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(HttpStatus.OK.value(),
+                        "Certificate updated successfully",
+                        certificate)
+        );
     }
 
-    // ----------------- DELETE -----------------
-
+    // -------------------------------------------------
+    // DELETE
+    // -------------------------------------------------
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Certificate>> deleteCertificate(@PathVariable Integer id) {
-        Certificate response = certificateService.deleteCertificate(id);
-        return ResponseEntity.ok(new ApiResponse<>(200, "Certificate deleted successfully", response));
+    public ResponseEntity<ApiResponse<Certificate>> deleteCertificate(
+            @PathVariable Integer id) {
+
+        Certificate certificate =
+                certificateService.deleteCertificate(id);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(HttpStatus.OK.value(),
+                        "Certificate deleted successfully",
+                        certificate)
+        );
     }
 }
