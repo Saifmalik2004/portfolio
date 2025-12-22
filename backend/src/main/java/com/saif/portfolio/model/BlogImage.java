@@ -27,11 +27,11 @@ public class BlogImage {
     private Integer id;
 
     @Column(nullable = false)
-    private String publicId; // 🔹 Cloudinary public ID
+    private String publicId;
 
     @Column(nullable = false)
-    private String url; // 🔹 Cloudinary image URL
-    
+    private String url;
+
     @JsonIgnore
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "blog_id", nullable = false)

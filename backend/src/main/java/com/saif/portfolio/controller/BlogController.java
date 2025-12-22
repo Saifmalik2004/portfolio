@@ -1,7 +1,7 @@
 package com.saif.portfolio.controller;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,13 +10,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.saif.portfolio.dto.ApiResponse;
 import com.saif.portfolio.dto.BlogListResponse;
 import com.saif.portfolio.dto.BlogRequest;
+import com.saif.portfolio.dto.PagedResponse;
 import com.saif.portfolio.model.Blog;
-import com.saif.portfolio.service.impl.BlogServiceImpl;
+import com.saif.portfolio.service.BlogService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,52 +27,124 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/blogs")
 @RequiredArgsConstructor
 public class BlogController {
-    
-    private final BlogServiceImpl blogService;
 
+    // ✅ Always depend on interface (not impl)
+    private final BlogService blogService;
+
+    // ----------------------------------------------------------------
+    // GET ALL BLOGS (PAGINATED)
+    // ----------------------------------------------------------------
     @GetMapping
-    public ResponseEntity<ApiResponse<List<BlogListResponse>>> getAllBlogs() {
-        List<BlogListResponse> responses = blogService.getAllBlogs();
-        return ResponseEntity.ok(new ApiResponse<>(200, "Blogs fetched successfully", responses));
+    public ResponseEntity<ApiResponse<PagedResponse<BlogListResponse>>> getAllBlogs(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "6") int size) {
+
+        Page<BlogListResponse> result = blogService.getAllBlogs(page, size);
+
+        PagedResponse<BlogListResponse> response = new PagedResponse<>(
+                result.getContent(),
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements(),
+                result.getTotalPages(),
+                result.isLast()
+        );
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(HttpStatus.OK.value(), "Blogs fetched successfully", response)
+        );
     }
 
+    // ----------------------------------------------------------------
+    // GET BLOG BY ID
+    // ----------------------------------------------------------------
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Blog>> getBlogById(@PathVariable int id) {
-        Blog response = blogService.getBlogById(id);
-        return ResponseEntity.ok(new ApiResponse<>(200, "Blog fetched successfully", response));
+    public ResponseEntity<ApiResponse<Blog>> getBlogById(@PathVariable Integer id) {
+        Blog blog = blogService.getBlogById(id);
+        return ResponseEntity.ok(
+                new ApiResponse<>(HttpStatus.OK.value(), "Blog fetched successfully", blog)
+        );
     }
 
+    // ----------------------------------------------------------------
+    // GET BLOG BY SLUG (SEO FRIENDLY)
+    // ----------------------------------------------------------------
     @GetMapping("/slug/{slug}")
     public ResponseEntity<ApiResponse<Blog>> getBlogBySlug(@PathVariable String slug) {
-        Blog response = blogService.getBlogBySlug(slug);
-        return ResponseEntity.ok(new ApiResponse<>(200, "Blog fetched successfully", response));
+        Blog blog = blogService.getBlogBySlug(slug);
+        return ResponseEntity.ok(
+                new ApiResponse<>(HttpStatus.OK.value(), "Blog fetched successfully", blog)
+        );
     }
 
+    // ----------------------------------------------------------------
+    // GET BLOGS BY CATEGORY (PAGINATED)
+    // ----------------------------------------------------------------
     @GetMapping("/category/{category}")
-    public ResponseEntity<ApiResponse<List<BlogListResponse>>> getBlogsByCategory(@PathVariable String category) {
-        List<BlogListResponse> responses = blogService.getBlogsByCategory(category);
-        if (responses.isEmpty()) {
-            return ResponseEntity.status(404)
-                .body(new ApiResponse<>(404, "No blogs found for category: " + category, null));
-        }
-        return ResponseEntity.ok(new ApiResponse<>(200, "Blogs fetched by category", responses));
+    public ResponseEntity<ApiResponse<PagedResponse<BlogListResponse>>> getBlogsByCategory(
+            @PathVariable String category,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "6") int size) {
+
+        Page<BlogListResponse> result =
+                blogService.getBlogsByCategory(category, page, size);
+
+        PagedResponse<BlogListResponse> response = new PagedResponse<>(
+                result.getContent(),
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements(),
+                result.getTotalPages(),
+                result.isLast()
+        );
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(HttpStatus.OK.value(), "Blogs fetched by category", response)
+        );
     }
 
+    // ----------------------------------------------------------------
+    // CREATE BLOG
+    // ----------------------------------------------------------------
     @PostMapping
-    public ResponseEntity<ApiResponse<Blog>> createBlog(@Valid @RequestBody BlogRequest blogRequest) {
-        Blog response = blogService.createBlog(blogRequest);
-        return ResponseEntity.status(201).body(new ApiResponse<>(201, "Blog created successfully", response));
+    public ResponseEntity<ApiResponse<Blog>> createBlog(
+            @Valid @RequestBody BlogRequest blogRequest) {
+
+        Blog blog = blogService.createBlog(blogRequest);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(
+                        HttpStatus.CREATED.value(),
+                        "Blog created successfully",
+                        blog
+                ));
     }
 
+    // ----------------------------------------------------------------
+    // UPDATE BLOG
+    // ----------------------------------------------------------------
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Blog>> updateBlog(@PathVariable int id, @Valid @RequestBody BlogRequest blogRequest) {
-        Blog response = blogService.updateBlog(id, blogRequest);
-        return ResponseEntity.ok(new ApiResponse<>(200, "Blog updated successfully", response));
+    public ResponseEntity<ApiResponse<Blog>> updateBlog(
+            @PathVariable Integer id,
+            @Valid @RequestBody BlogRequest blogRequest) {
+
+        Blog blog = blogService.updateBlog(id, blogRequest);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(HttpStatus.OK.value(), "Blog updated successfully", blog)
+        );
     }
 
+    // ----------------------------------------------------------------
+    // DELETE BLOG
+    // ----------------------------------------------------------------
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Blog>> deleteBlog(@PathVariable int id) {
-        Blog response = blogService.deleteBlog(id);
-        return ResponseEntity.ok(new ApiResponse<>(200, "Blog deleted successfully", response));
+    public ResponseEntity<ApiResponse<Blog>> deleteBlog(@PathVariable Integer id) {
+
+        Blog blog = blogService.deleteBlog(id);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(HttpStatus.OK.value(), "Blog deleted successfully", blog)
+        );
     }
 }

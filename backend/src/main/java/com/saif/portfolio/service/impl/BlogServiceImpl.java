@@ -1,11 +1,13 @@
 package com.saif.portfolio.service.impl;
 
-import java.util.List;
-
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.saif.portfolio.dto.BlogListResponse;
 import com.saif.portfolio.dto.BlogRequest;
@@ -15,7 +17,6 @@ import com.saif.portfolio.model.BlogImage;
 import com.saif.portfolio.repository.BlogRepository;
 import com.saif.portfolio.service.BlogService;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -24,112 +25,149 @@ public class BlogServiceImpl implements BlogService {
 
     private final BlogRepository blogRepository;
 
-    // ✅ Get all blogs (summary only)
-    @Transactional
-    @Cacheable(value = "blogList")
+    // ----------------------------------------------------------------
+    // READ OPERATIONS (CACHED)
+    // ----------------------------------------------------------------
+
     @Override
-    public List<BlogListResponse> getAllBlogs() {
-        return blogRepository.findAllSummaries();
+    @Cacheable(value = "blogList", key = "#page + '-' + #size")
+    @Transactional(readOnly = true)
+    public Page<BlogListResponse> getAllBlogs(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return blogRepository.findAllSummaries(pageable);
     }
 
-    @Transactional
     @Override
+    @Transactional(readOnly = true)
     public Blog getBlogById(Integer id) {
         return blogRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Blog not found with id: " + id));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Blog not found with id: " + id));
     }
 
-    @Cacheable(value = "blogs", key = "#slug")
-    @Transactional
     @Override
+    @Cacheable(value = "blogs", key = "#slug.toLowerCase()")
+    @Transactional(readOnly = true)
     public Blog getBlogBySlug(String slug) {
-        return blogRepository.findBySlug(slug)
-                .orElseThrow(() -> new ResourceNotFoundException("Blog not found with slug: " + slug));
+        String normalizedSlug = slug.toLowerCase();
+        return blogRepository.findBySlug(normalizedSlug)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Blog not found with slug: " + normalizedSlug));
     }
 
-    // ✅ Get blogs by category (summary only)
-    @Transactional
     @Override
-    public List<BlogListResponse> getBlogsByCategory(String category) {
-        return blogRepository.findSummariesByCategory(category);
+    @Cacheable(
+        value = "blogListByCategory",
+        key = "#category.toLowerCase() + '-' + #page + '-' + #size"
+    )
+    @Transactional(readOnly = true)
+    public Page<BlogListResponse> getBlogsByCategory(String category, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return blogRepository.findSummariesByCategory(category.toLowerCase(), pageable);
     }
 
-    // ✅ Create Blog (with image)
-    @Transactional
-    @Caching(evict = {
-        @CacheEvict(value = "blogList", allEntries = true)
-    })
+    // ----------------------------------------------------------------
+    // CREATE
+    // ----------------------------------------------------------------
+
     @Override
-    public Blog createBlog(BlogRequest blogRequest) {
-        // 1️⃣ Create Blog
-        Blog blog = new Blog();
-        blog.setTitle(blogRequest.getTitle());
-        blog.setSlug(blogRequest.getSlug().toLowerCase());
-        blog.setSummary(blogRequest.getSummary());
-        blog.setContent(blogRequest.getContent());
-        blog.setCategory(blogRequest.getCategory());
-        blog.setReadTime(blogRequest.getReadTime());
-        blog.setAuthor(blogRequest.getAuthor());
-
-        // 2️⃣ Create BlogImage
-        BlogImage image = new BlogImage();
-        image.setPublicId(blogRequest.getImage().getPublicId());
-        image.setUrl(blogRequest.getImage().getUrl());
-        image.setBlog(blog);
-
-        // 3️⃣ Set image reference
-        blog.setImage(image);
-
-        // 4️⃣ Save (Cascade saves both)
-        return blogRepository.save(blog);
-    }
-
-    // ✅ Update Blog (with image update)
     @Transactional
     @Caching(evict = {
-        @CacheEvict(value = "blogs", key = "#result.slug"),
-        @CacheEvict(value = "blogList", allEntries = true)
+        @CacheEvict(value = "blogs", allEntries = true),
+        @CacheEvict(value = "blogList", allEntries = true),
+        @CacheEvict(value = "blogListByCategory", allEntries = true)
     })
-    @Override
-    public Blog updateBlog(Integer id, BlogRequest blogRequest) {
-        Blog blog = blogRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Blog not found with id: " + id));
+    public Blog createBlog(BlogRequest request) {
 
-        // Update base fields
-        blog.setTitle(blogRequest.getTitle());
-        blog.setSlug(blogRequest.getSlug().toLowerCase());
-        blog.setCategory(blogRequest.getCategory());
-        blog.setReadTime(blogRequest.getReadTime());
-        blog.setAuthor(blogRequest.getAuthor());
-        blog.setSummary(blogRequest.getSummary());
-        blog.setContent(blogRequest.getContent());
+        String slug = request.getSlug().toLowerCase();
 
-        // Handle image update
-        BlogImage existingImage = blog.getImage();
-        if (existingImage == null) {
-            existingImage = new BlogImage();
-            existingImage.setBlog(blog);
+        // ✅ Slug uniqueness check
+        if (blogRepository.existsBySlugIgnoreCase(slug)) {
+            throw new IllegalArgumentException("Blog with slug '" + slug + "' already exists");
         }
 
-        existingImage.setPublicId(blogRequest.getImage().getPublicId());
-        existingImage.setUrl(blogRequest.getImage().getUrl());
+        Blog blog = new Blog();
+        blog.setTitle(request.getTitle());
+        blog.setSlug(slug);
+        blog.setSummary(request.getSummary());
+        blog.setContent(request.getContent());
+        blog.setCategory(request.getCategory().toLowerCase());
+        blog.setReadTime(request.getReadTime());
+        blog.setAuthor(request.getAuthor());
 
-        blog.setImage(existingImage);
+        BlogImage image = new BlogImage();
+        image.setPublicId(request.getImage().getPublicId());
+        image.setUrl(request.getImage().getUrl());
+        image.setBlog(blog);
 
-        // Cascade will automatically save/update BlogImage
+        blog.setImage(image);
+
         return blogRepository.save(blog);
     }
 
-    // ✅ Delete Blog (Cascade removes image)
+    // ----------------------------------------------------------------
+    // UPDATE
+    // ----------------------------------------------------------------
+
+    @Override
     @Transactional
     @Caching(evict = {
-        @CacheEvict(value = "blogs", key = "#result.slug"),
-        @CacheEvict(value = "blogList", allEntries = true)
+        @CacheEvict(value = "blogs", allEntries = true),
+        @CacheEvict(value = "blogList", allEntries = true),
+        @CacheEvict(value = "blogListByCategory", allEntries = true)
     })
-    @Override
-    public Blog deleteBlog(Integer id) {
+    public Blog updateBlog(Integer id, BlogRequest request) {
+
         Blog blog = blogRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Blog not found with id: " + id));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Blog not found with id: " + id));
+
+        String newSlug = request.getSlug().toLowerCase();
+
+        // ✅ Slug change hone par duplicate check
+        if (!blog.getSlug().equalsIgnoreCase(newSlug)
+                && blogRepository.existsBySlugIgnoreCase(newSlug)) {
+            throw new IllegalArgumentException("Blog with slug '" + newSlug + "' already exists");
+        }
+
+        blog.setTitle(request.getTitle());
+        blog.setSlug(newSlug);
+        blog.setCategory(request.getCategory().toLowerCase());
+        blog.setReadTime(request.getReadTime());
+        blog.setAuthor(request.getAuthor());
+        blog.setSummary(request.getSummary());
+        blog.setContent(request.getContent());
+
+        BlogImage image = blog.getImage();
+        if (image == null) {
+            image = new BlogImage();
+            image.setBlog(blog);
+        }
+
+        image.setPublicId(request.getImage().getPublicId());
+        image.setUrl(request.getImage().getUrl());
+        blog.setImage(image);
+
+        return blogRepository.save(blog);
+    }
+
+    // ----------------------------------------------------------------
+    // DELETE
+    // ----------------------------------------------------------------
+
+    @Override
+    @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = "blogs", allEntries = true, beforeInvocation = true),
+        @CacheEvict(value = "blogList", allEntries = true, beforeInvocation = true),
+        @CacheEvict(value = "blogListByCategory", allEntries = true, beforeInvocation = true)
+    })
+    public Blog deleteBlog(Integer id) {
+
+        Blog blog = blogRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Blog not found with id: " + id));
+
         blogRepository.delete(blog);
         return blog;
     }

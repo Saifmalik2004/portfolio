@@ -9,6 +9,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
@@ -18,11 +19,19 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "blogs")
+@Table(
+    name = "blogs",
+    indexes = {
+        @Index(name = "idx_blogs_category_created_at", columnList = "category, created_at"),
+        @Index(name = "idx_blogs_slug", columnList = "slug")
+
+    }
+)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Blog {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -54,14 +63,14 @@ public class Blog {
     @Column(columnDefinition = "TEXT")
     private String content;
 
-    @OneToOne(mappedBy = "blog", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "blog", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private BlogImage image;
 
-    // ✅ Add this part
     @PrePersist
     public void onCreate() {
-        this.createdAt = Instant.now();
-        this.updatedAt = Instant.now();
+        Instant now = Instant.now();
+        this.createdAt = now;
+        this.updatedAt = now;
     }
 
     @PreUpdate

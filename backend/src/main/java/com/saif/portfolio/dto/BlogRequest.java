@@ -32,8 +32,8 @@ public class BlogRequest {
 
     @NotBlank(message = "Author must not be blank")
     private String author;
-
+    
+    @NotBlank(message = "Image must not be blank")
     private ImageUploadResponse image;
     
-
 }
